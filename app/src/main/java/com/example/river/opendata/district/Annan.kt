@@ -1,6 +1,7 @@
 package com.example.river.opendata.district
 
 import android.graphics.PointF
+import com.google.android.gms.maps.model.LatLngBounds
 
 class Annan {
     companion object {
