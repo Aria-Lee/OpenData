@@ -56,9 +56,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
 
-
-
-
         mMap.setOnPolygonClickListener {
             Toast.makeText(this, it.tag.toString(), Toast.LENGTH_SHORT).show()
 //            mMap.animateCamera(
