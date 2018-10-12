@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <array name="year_array">
-        <item>2015</item>
-        <item>2016</item>
-        <item>2017</item>
-        <item>2018</item>
+        <item>"2018"</item>
+        <item>"2017"</item>
+        <item>"2016"</item>
+        <item>"2015"</item>
+        <item>"2014"</item>
     </array>
 
     <array name="month_array">
@@ -21,8 +22,6 @@
         <item>10 月</item>
         <item>11 月</item>
         <item>12 月</item>
-
-
     </array>
 
 </resources>
