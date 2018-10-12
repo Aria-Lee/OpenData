@@ -15,6 +15,8 @@ import com.google.android.gms.maps.SupportMapFragment
 import android.content.res.Resources.NotFoundException
 import android.R.raw
 import android.content.res.Resources
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import android.support.v4.app.FragmentActivity
 import android.util.Log
@@ -25,6 +27,10 @@ import android.location.Location.distanceBetween
 import com.google.android.gms.common.util.ArrayUtils.contains
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.StringWriter
+import java.lang.Exception
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -35,6 +41,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
@@ -63,7 +70,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             val success = mMap.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             this, R.raw.style_json))
-
             if (!success) {
                 Log.e("aaaaa", "Style parsing failed.")
             }
@@ -75,49 +81,33 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.setLatLngBoundsForCameraTarget(bounds)
         mMap.setMinZoomPreference(11f)
 
-        var list = Anping.getLatLng()
-        var list2 = Annan.getLatLng()
-        bounds(list)
+        val jsonString = DataHelper.getJSONString(resources.openRawResource(R.raw.gml_json))
 
-        addDistrincsPolygons(list, "Anping")
-        addDistrincsPolygons(list2, "Annan")
-
+        addPolygons(DataHelper.getList(jsonString))
 
         mMap.moveCamera(
                 CameraUpdateFactory.newLatLngZoom(
                         LatLng(
                                 23.000947952270508,
                                 120.14522552490234),
-                        12.0f))
+                        11.0f))
+
+
 
         mMap.setOnMapLongClickListener {
-            if (PtInPolygon(it, list))
-                Toast.makeText(this, "Anping Long Click", Toast.LENGTH_LONG).show()
-            if (PtInPolygon(it, list2))
-                Toast.makeText(this, "Annan Long Click", Toast.LENGTH_LONG).show()
+            val geocoder = Geocoder(this)
+            val addressList: MutableList<Address>
+
+            addressList = geocoder.getFromLocation(it.latitude, it.longitude, 1)
+            Toast.makeText(this,
+                    addressList[0].locality, Toast.LENGTH_SHORT).show()
         }
 
         mMap.setOnPolygonClickListener {
             Toast.makeText(this, it.tag.toString(), Toast.LENGTH_SHORT).show()
             it.fillColor = Color.WHITE
             it.strokeColor = Color.BLUE
-//            mMap.animateCamera(
-//                    CameraUpdateFactory.newLatLngZoom(
-//                            LatLng(.latitude, location.longitude),
-//                            12.0f))
-
-//            mMap.moveCamera(
-//                    CameraUpdateFactory.newLatLngZoom(
-//                            LatLng(it.points[0].latitude,
-//                                    it.points[0].longitude),
-//                            12.0f))
         }
-
-
-        // Add a marker in Sydney and move the camera
-//        val sydney = LatLng(-34.0, 151.0)
-//        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
     }
 
     fun bounds(list: MutableList<PointF>) {
@@ -130,29 +120,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     }
 
-    fun addDistrincsPolygons(list: MutableList<PointF>, tag: String) {
+    fun addPolygons(list: MutableList<MutableList<LatLng>>) {
 
-        var polygonOptions = PolygonOptions()
+        for (districtList in list) {
 
-        for (i in list) {
-            polygonOptions.add(LatLng(i.x.toDouble(), i.y.toDouble()))
+            var polygonOptions = PolygonOptions()
+
+            for (x in districtList) {
+                polygonOptions.add(x)
+            }
+
+            var polygon = mMap.addPolygon(
+                    polygonOptions
+                            .strokeColor(Color.GREEN)
+                            .fillColor(Color.YELLOW)
+            )
+            polygon.isClickable = true
         }
-
-
-        var polygon = mMap.addPolygon(
-                polygonOptions
-                        .strokeColor((Color.GREEN))
-                        .fillColor(Color.YELLOW))
-        polygon.isClickable = true
-        polygon.tag = tag
     }
 
 
-    fun PtInPolygon(point: LatLng, list: MutableList<PointF>): Boolean {
-        val APoints = mutableListOf<LatLng>()
-        for (i in 0..list.size - 1) {
-            APoints.add(LatLng(list[i].x.toDouble(), list[i].y.toDouble()))
-        }
+    fun PtInPolygon(point: LatLng, APoints: MutableList<LatLng>): Boolean {
         var nCross = 0
         for (i in 0..APoints.size - 1) {
             val p1 = APoints.get(i)
