@@ -13,6 +13,7 @@ class Anping {
                 var list = i.split(",")
                 result.add(PointF(list[1].toFloat(), list[0].toFloat()))
             }
+
             return result
         }
     }
