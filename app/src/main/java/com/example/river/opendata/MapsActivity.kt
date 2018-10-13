@@ -1,113 +1,100 @@
 package com.example.river.opendata
 
-import android.graphics.Color
 import android.graphics.PointF
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.view.View
-import android.widget.Toast
-import com.example.river.opendata.district.Annan
-import com.example.river.opendata.district.Anping
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import android.content.res.Resources.NotFoundException
-import android.R.raw
-import android.content.res.Resources
-import android.location.Address
-import android.location.Geocoder
-import android.location.Location
-import android.support.v4.app.FragmentActivity
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.ViewGroup
-import com.google.android.gms.maps.model.*
-import android.location.Location.distanceBetween
-import com.google.android.gms.common.util.ArrayUtils.contains
+import com.example.river.opendata.fragments.ChartFragment
+import com.example.river.opendata.fragments.MapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.PolylineOptions
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.StringWriter
-import java.lang.Exception
+import com.google.android.gms.maps.model.LatLngBounds
+import kotlinx.android.synthetic.main.activity_maps.*
 
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity() {
 
-    private lateinit var mMap: GoogleMap
-    lateinit var view: View
+
+    enum class FragmentType {
+        Map,
+        Chart
+    }
+
+    var type = FragmentType.Map
+    val manager = this.supportFragmentManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-                .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
-//        val viewGroup : ViewGroup = R.id.content as ViewGroup
-//        view = LayoutInflater.from(this).inflate(R.layout.for_polygon,viewGroup, false)
+//        val mapFragment = supportFragmentManager
+//                .findFragmentById(R.id.map) as SupportMapFragment
+
+
+        navigation.setOnNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.navigation_map -> {
+                    type = FragmentType.Map
+                }
+                R.id.navigation_chart -> {
+                    type = FragmentType.Chart
+                }
+                else -> {
+                    return@setOnNavigationItemSelectedListener false
+                }
+            }
+
+            switchContent()
+            true
+        }
+
+        switchContent()
+
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+    private var mapFragment: MapFragment? = null
+    private var chartFragment: ChartFragment? = null
+
+    private fun switchContent() {
+        val transaction = manager
+                .beginTransaction()
+//                .setCustomAnimations(
+//                        android.R.anim.fade_in, android.R.anim.fade_out)
+
+        if (mapFragment == null) {
+            mapFragment = MapFragment()
+            mapFragment!!.getMapAsync(mapFragment)
+        }
+
+        if (chartFragment == null) {
+            chartFragment = ChartFragment()
+        }
+
+        when (type) {
+            FragmentType.Map -> {
+                if (!mapFragment!!.isAdded) {
+                    transaction.add(R.id.container, mapFragment!!)
+                }
+                transaction
+                        .hide(chartFragment!!)
+                        .show(mapFragment!!)
+                        .commit()
+            }
+
+            FragmentType.Chart -> {
+                if (!chartFragment!!.isAdded) {
+                    transaction.add(R.id.container, chartFragment!!)
+                }
+                transaction
+                        .hide(mapFragment!!)
+                        .show(chartFragment!!)
+                        .commit()
+            }
+        }
+    }
+
 
     var boundsList = mutableListOf<LatLngBounds>()
-
-    override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-        try {
-            // Customise the styling of the base map using a JSON object defined
-            // in a raw resource file.
-            val success = mMap.setMapStyle(
-                    MapStyleOptions.loadRawResourceStyle(
-                            this, R.raw.style_json))
-            if (!success) {
-                Log.e("aaaaa", "Style parsing failed.")
-            }
-        } catch (e: Resources.NotFoundException) {
-            Log.e("aaaaa", "Can't find style. Error: ", e)
-        }
-
-        val bounds = LatLngBounds(LatLng(22.967090, 120.067050), LatLng(23.091322, 120.247097))
-        mMap.setLatLngBoundsForCameraTarget(bounds)
-        mMap.setMinZoomPreference(11f)
-
-        val jsonString = DataHelper.getJSONString(resources.openRawResource(R.raw.gml_json))
-
-        addPolygons(DataHelper.getList(jsonString))
-
-        mMap.moveCamera(
-                CameraUpdateFactory.newLatLngZoom(
-                        LatLng(
-                                23.000947952270508,
-                                120.14522552490234),
-                        11.0f))
-        
-
-        mMap.setOnMapLongClickListener {
-            val geocoder = Geocoder(this)
-            val addressList: MutableList<Address>
-
-            addressList = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-            Toast.makeText(this,
-                    addressList[0].locality, Toast.LENGTH_SHORT).show()
-        }
-
-        mMap.setOnPolygonClickListener {
-            Toast.makeText(this, it.tag.toString(), Toast.LENGTH_SHORT).show()
-            it.fillColor = Color.WHITE
-            it.strokeColor = Color.BLUE
-        }
-    }
 
     fun bounds(list: MutableList<PointF>) {
         var builder = LatLngBounds.Builder()
@@ -117,25 +104,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         Log.wtf("aaaaa", boundsList.toString())
 
-    }
-
-    fun addPolygons(list: MutableList<MutableList<LatLng>>) {
-
-        for (districtList in list) {
-
-            var polygonOptions = PolygonOptions()
-
-            for (x in districtList) {
-                polygonOptions.add(x)
-            }
-
-            var polygon = mMap.addPolygon(
-                    polygonOptions
-                            .strokeColor(Color.GREEN)
-                            .fillColor(Color.YELLOW)
-            )
-            polygon.isClickable = true
-        }
     }
 
 
