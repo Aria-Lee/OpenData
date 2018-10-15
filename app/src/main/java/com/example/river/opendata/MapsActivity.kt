@@ -4,6 +4,8 @@ import android.graphics.PointF
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.View
+import com.bumptech.glide.Glide
 import com.example.river.opendata.fragments.ChartFragment
 import com.example.river.opendata.fragments.MapFragment
 import com.google.android.gms.maps.model.LatLng
@@ -22,14 +24,37 @@ class MapsActivity : AppCompatActivity() {
     var type = FragmentType.Map
     val manager = this.supportFragmentManager
 
+
+    fun init() {
+        initFragments()
+        supportActionBar?.hide()
+        navigation.visibility = View.GONE
+        container.visibility = View.GONE
+        Glide.with(this).load(R.drawable.mosquito_clipart_animation).into(loading)
+        mapFragment!!.getMapAsync(mapFragment)
+        switchContent()
+    }
+
+    fun showMap(){
+        switchContent()
+        supportActionBar?.show()
+        navigation.visibility = View.VISIBLE
+        loading.visibility = View.GONE
+        container.visibility = View.VISIBLE
+        println("*** showMap")
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
 
+        init()
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
 //        val mapFragment = supportFragmentManager
 //                .findFragmentById(R.id.map) as SupportMapFragment
-
 
         navigation.setOnNavigationItemSelectedListener {
             when (it.itemId) {
@@ -48,8 +73,6 @@ class MapsActivity : AppCompatActivity() {
             true
         }
 
-        switchContent()
-
     }
 
     private var mapFragment: MapFragment? = null
@@ -61,14 +84,6 @@ class MapsActivity : AppCompatActivity() {
 //                .setCustomAnimations(
 //                        android.R.anim.fade_in, android.R.anim.fade_out)
 
-        if (mapFragment == null) {
-            mapFragment = MapFragment()
-            mapFragment!!.getMapAsync(mapFragment)
-        }
-
-        if (chartFragment == null) {
-            chartFragment = ChartFragment()
-        }
 
         when (type) {
             FragmentType.Map -> {
@@ -93,6 +108,17 @@ class MapsActivity : AppCompatActivity() {
         }
     }
 
+    fun initFragments(){
+
+        if (mapFragment == null) {
+            mapFragment = MapFragment()
+            mapFragment!!.addCallBack(::showMap)
+        }
+
+        if (chartFragment == null) {
+            chartFragment = ChartFragment()
+        }
+    }
 
     var boundsList = mutableListOf<LatLngBounds>()
 

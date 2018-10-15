@@ -43,7 +43,7 @@ class DataHelper {
 
                 val key = iterator.next()
                 districtList.add(key)
-                println("*** $key")
+//                println("*** $key")
 
                 var list = mutableListOf<LatLng>()
                 try {

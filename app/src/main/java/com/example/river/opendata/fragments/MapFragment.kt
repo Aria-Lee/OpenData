@@ -1,19 +1,24 @@
 package com.example.river.opendata.fragments
 
 
+import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupWindow
+import android.widget.TextView
 import android.widget.Toast
 import com.example.river.opendata.DataHelper
 import com.example.river.opendata.R
-
+import com.example.river.opendata.ShowSubChart
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -22,12 +27,15 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.PolygonOptions
-import kotlinx.android.synthetic.main.fragment_map.*
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.Marker
+import kotlinx.android.synthetic.main.activity_maps.*
 
 
-class MapFragment : SupportMapFragment(), OnMapReadyCallback {
+class MapFragment() : SupportMapFragment(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
+    private var marker: Marker? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return super.onCreateView(inflater, container, savedInstanceState)
@@ -40,6 +48,7 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback {
     }
 
     override fun getMapAsync(p0: OnMapReadyCallback?) {
+        println("*** MapAsync")
         super.getMapAsync(p0)
     }
 
@@ -68,9 +77,10 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback {
             Log.e("aaaaa", "Can't find style. Error: ", e)
         }
 
-        val bounds = LatLngBounds(LatLng(22.967090, 120.067050), LatLng(23.091322, 120.247097))
+        val bounds =
+                LatLngBounds(LatLng(23.091185, 120.228257), LatLng(23.450089, 120.665024))
         mMap.setLatLngBoundsForCameraTarget(bounds)
-        mMap.setMinZoomPreference(11f)
+        mMap.setMinZoomPreference(10.0f)
 
         val jsonString = DataHelper.getJSONString(resources.openRawResource(R.raw.gml_json))
 
@@ -81,33 +91,58 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback {
                         LatLng(
                                 23.000947952270508,
                                 120.14522552490234),
-                        11.0f))
+                        10.0f))
 
 
         mMap.setOnMapLongClickListener {
-            val geocoder = Geocoder(this.context)
-            val addressList: MutableList<Address>
-
-            addressList = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-            Toast.makeText(this.context,
-                    addressList[0].locality, Toast.LENGTH_SHORT).show()
+            removeMarker()
+            if (getDistrict(it) != null) {
+                addMarker(it)
+            }
         }
+
+        mMap.setOnMapClickListener {
+            removeMarker()
+        }
+
 
         mMap.setOnPolygonClickListener {
+            removeMarker()
             Toast.makeText(this.context, it.tag.toString(), Toast.LENGTH_SHORT).show()
-            it.fillColor = Color.WHITE
-            it.strokeColor = Color.BLUE
+            val intent = Intent(this.context, ShowSubChart::class.java)
+            intent.putExtra("district", it.tag.toString())
+            startActivity(intent)
         }
+
+        mMap.setOnMarkerClickListener(object : GoogleMap.OnMarkerClickListener {
+            override fun onMarkerClick(p0: Marker?): Boolean {
+                removeMarker()
+                var district = getDistrict(p0!!.position)
+                val intent = Intent(context, ShowSubChart::class.java)
+                intent.putExtra("district", district)
+                startActivity(intent)
+                return false
+            }
+        })
+
+        Thread {
+            Thread.sleep(3000)
+            println("*** invoke")
+            activity!!.runOnUiThread { this.callBack.invoke() }
+
+        }.start()
+
+        println("*** MapReady")
     }
 
     fun addPolygons(list: MutableList<MutableList<LatLng>>) {
 
-        for (districtList in list) {
+        for (i in 0 until list.size) {
 
             var polygonOptions = PolygonOptions()
 
-            for (x in districtList) {
-                polygonOptions.add(x)
+            for (j in list[i]) {
+                polygonOptions.add(j)
             }
 
             var polygon = mMap.addPolygon(
@@ -116,8 +151,51 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback {
                             .fillColor(Color.YELLOW)
             )
             polygon.isClickable = true
+            polygon.tag = DataHelper.districtList[i]
         }
     }
 
 
+    lateinit var callBack: () -> Unit
+    fun addCallBack(callBack: () -> Unit) {
+        println("*** addCallBack")
+        this.callBack = callBack
+    }
+
+
+    fun addMarker(latLng: LatLng) {
+        marker =
+                mMap.addMarker(
+                        MarkerOptions()
+                                .alpha(0f)
+                                .position(latLng)
+                                .title("Hello world")
+
+                )
+
+        marker!!.showInfoWindow()
+    }
+
+    fun removeMarker() {
+        if (marker != null) {
+            marker!!.remove()
+        }
+    }
+
+    fun getDistrict(latLng: LatLng): String? {
+        val geocoder = Geocoder(this.context)
+        val addressList: MutableList<Address>
+
+        addressList = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+
+        if (addressList.size == 0) {
+            return null
+        }
+
+        Toast.makeText(this.context,
+                addressList[0].locality, Toast.LENGTH_SHORT).show()
+
+        return addressList[0].locality
+    }
 }
+
