@@ -1,5 +1,8 @@
 package com.example.river.opendata
 
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.formatter.IValueFormatter
+import com.github.mikephil.charting.utils.ViewPortHandler
 import com.google.android.gms.maps.model.LatLng
 import org.json.JSONObject
 import org.json.JSONException
@@ -7,13 +10,14 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.StringWriter
+import java.text.DecimalFormat
 
 class DataHelper {
     companion object {
 
         val districtList = mutableListOf<String>()
 
-        fun getJSONString(iStream:InputStream):String{
+        fun getJSONString(iStream: InputStream): String {
             val writer = StringWriter()
             val buffer = CharArray(1024)
             try {
@@ -60,7 +64,11 @@ class DataHelper {
             }
 
             var a = result
-            return  result
+            return result
         }
+
+
     }
+
+
 }
