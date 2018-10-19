@@ -63,7 +63,7 @@ class DataHelper {
                 }
             }
 
-            var a = result
+            println(districtList.toString())
             return result
         }
 

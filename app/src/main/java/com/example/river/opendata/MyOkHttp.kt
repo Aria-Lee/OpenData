@@ -5,21 +5,23 @@ import android.widget.Toast
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
+import kotlin.reflect.KFunction
 
-class MyOkHttp(val context:Context) {
+class MyOkHttp(val context: Context) {
 
-    lateinit var jsonObject: JSONObject
+//    lateinit var jsonObjectRain: JSONObject
+//    lateinit var jsonObjectDengue: JSONObject
 
-    fun request(url: String, cb: () -> Unit) {
+    fun request(url: String, request: String, cb: (String, JSONObject) -> Unit, type: String) {
+
         val client = OkHttpClient()
 
         val requestBuilder = Request.Builder()
         val JSON = MediaType.parse("application/json; charset=utf-8")
-        val body = RequestBody.create(JSON, "{\"year\":\"2015\", \"district\":\"東區\"}")
 
+        val body = RequestBody.create(JSON, request)
 
         val request = requestBuilder
-
                 .url(url)
                 .post(body)
                 .build()
@@ -31,28 +33,30 @@ class MyOkHttp(val context:Context) {
             }
 
             override fun onResponse(call: Call, response: Response) {
-                //println("*** ${response.body()!!.string()}")
-                jsonObject = JSONObject(response.body()!!.string())
-                cb.invoke()
+                 var jsonObject: JSONObject =JSONObject(response.body()!!.string())
+//                when (type) {
+//                    "rain" -> jsonObjectRain = JSONObject(response.body()!!.string())
+//                    "dengue" -> jsonObjectDengue = JSONObject(response.body()!!.string())
+//                }
+                cb.invoke(type, jsonObject)
             }
-
         })
     }
 
 
-    fun isSuccess(): Boolean {
+    fun isSuccess(jsonObject:JSONObject): Boolean {
         return jsonObject.getString("result").toBoolean()
     }
 
-    fun getFloatData(): Float {
+    fun getFloatData(jsonObject:JSONObject): Float {
         return jsonObject.getString("data").toFloat()
     }
 
-    fun getJSONObjectData(): JSONObject {
+    fun getJSONObjectData(jsonObject: JSONObject): JSONObject {
         return JSONObject(jsonObject.getString("data"))
     }
 
-    fun getStringData(): String {
+    fun getStringData(jsonObject:JSONObject): String {
         return jsonObject.getString("data")
     }
 

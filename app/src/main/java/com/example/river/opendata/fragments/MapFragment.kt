@@ -154,14 +154,12 @@ class MapFragment() : SupportMapFragment(), OnMapReadyCallback {
             polygon.tag = DataHelper.districtList[i]
         }
     }
-
-
+    
     lateinit var callBack: () -> Unit
     fun addCallBack(callBack: () -> Unit) {
         println("*** addCallBack")
         this.callBack = callBack
     }
-
 
     fun addMarker(latLng: LatLng) {
         marker =
