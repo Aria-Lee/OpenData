@@ -6,7 +6,7 @@ import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
 
-class MyOkHttp(val context: Context) {
+class MyOkHttp(val context: Context?) {
 
 
     fun request(url: String, request: String, cb: (String, JSONObject) -> Unit, type: String) {

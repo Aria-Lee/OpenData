@@ -1,45 +1,130 @@
 package com.example.river.opendata.fragments
 
 
+import android.app.Application
 import android.content.Intent
 import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.location.Address
 import android.location.Geocoder
+import android.media.Image
 import android.os.Bundle
+import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat.startActivity
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Toast
-import com.example.river.opendata.DataHelper
+import com.example.river.opendata.*
 import com.example.river.opendata.R
-import com.example.river.opendata.ShowSubChart
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.data.CombinedData
+import com.github.mikephil.charting.data.Entry
+import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
+import kotlinx.android.synthetic.main.fragment_map.*
+import kotlinx.android.synthetic.main.fragment_map.view.*
+import kotlinx.android.synthetic.main.sub_chart.*
+import kotlinx.android.synthetic.main.sub_chart.view.*
+import org.json.JSONObject
+import java.lang.Exception
 
 
-class MapFragment : SupportMapFragment(), OnMapReadyCallback {
+class MapFragment : Fragment(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private var marker: Marker? = null
+    lateinit var thisView: View
+    lateinit var okHttp: MyOkHttp
+    var year = ""
+    var url = ""
+    var district: String? = ""
+    var dengue : JSONObject? = null
+    var dengueNum = 0
+    lateinit var requestString: String
+    lateinit var markerImage : BitmapDescriptor
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return super.onCreateView(inflater, container, savedInstanceState)
-//        return inflater.inflate(R.layout.fragment_map, container, false)
+//        return super.onCreateView(inflater, container, savedInstanceState)
+        thisView = inflater.inflate(R.layout.fragment_map, container, false)
+        spinnerInit()
+        val map = getChildFragmentManager().findFragmentById(R.id.tainanMap) as SupportMapFragment
+        map.getMapAsync(this)
+        return thisView
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
+        okHttp = MyOkHttp(this.context)
+        MapsInitializer.initialize(this.context)
+        makeMarkerIcon()
         super.onCreate(savedInstanceState)
     }
 
-    override fun getMapAsync(p0: OnMapReadyCallback?) {
-        println("*** MapAsync")
-        super.getMapAsync(p0)
+    fun makeMarkerIcon(){
+        val bitmapFactoryOption = BitmapFactory.Options()
+        bitmapFactoryOption.inMutable = true
+        val bitmap = BitmapFactory.decodeResource(resources, R.drawable.ic_action_name, bitmapFactoryOption)
+        bitmap.width = 1
+        bitmap.height = 1
+        markerImage = BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
+    //    override fun getMapAsync(p0: OnMapReadyCallback?) {
+//        println("*** MapAsync")
+//        super.getMapAsync(p0)
+//    }
+    fun spinnerInit() {
+        val yearList = ArrayAdapter.createFromResource(this.context, R.array.year_array, R.layout.spinner_center_item)
+        thisView.all_year_spinner.adapter = yearList
+        thisView.all_year_spinner.onItemSelectedListener = spinnerListener
+//        spinnerToRequest()
+    }
+
+    val spinnerListener = object : AdapterView.OnItemSelectedListener {
+        override fun onNothingSelected(parent: AdapterView<*>?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            year = thisView.all_year_spinner.selectedItem.toString()
+            requestString = JSONObject().put("year", year).toString()
+            url = "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/dengue"
+            requestData("dengue", url)
+        }
+    }
+
+    fun requestData(type: String, url: String) {
+        Thread {
+            okHttp.request(
+                    url,
+                    requestString,
+                    ::callBack,
+                    type
+            )
+        }.start()
+    }
+
+    fun callBack(type: String, jsonObject: JSONObject) {
+        if (okHttp.isSuccess(jsonObject)) {
+//            println("*** ${System.nanoTime()} $type")
+            if (dengue != null) {
+                (context as MapsActivity).runOnUiThread {
+                    Toast.makeText(context, "數據已更新", Toast.LENGTH_LONG).show()
+                }
+            }
+            dengue = okHttp.getJSONObjectData(jsonObject)
+            if(marker != null){
+                (context as MapsActivity).runOnUiThread {
+                    addMarker(marker!!.position)
+                }
+            }
+        }
     }
 
     /**
@@ -98,7 +183,7 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback {
 
         mMap.setOnPolygonClickListener {
             removeMarker()
-            Toast.makeText(this.context, it.tag.toString(), Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this.context, it.tag.toString(), Toast.LENGTH_SHORT).show()
             val intent = Intent(this.context, ShowSubChart::class.java)
             intent.putExtra("district", it.tag.toString())
             startActivity(intent)
@@ -152,13 +237,20 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback {
     }
 
     fun addMarker(latLng: LatLng) {
+        district = getDistrict(latLng)
+        try {
+            dengueNum = dengue!!.getInt(district)
+        } catch (e: Exception) {
+            dengueNum = 0
+            Log.d("aaaaa", "No Value")
+        }
         marker =
                 mMap.addMarker(
                         MarkerOptions()
+                                .icon(markerImage)
                                 .alpha(0f)
                                 .position(latLng)
-                                .title("Hello world")
-
+                                .title("$district : $dengueNum")
                 )
 
         marker!!.showInfoWindow()
@@ -180,8 +272,8 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback {
             return null
         }
 
-        Toast.makeText(this.context,
-                addressList[0].locality, Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this.context,
+//                addressList[0].locality, Toast.LENGTH_SHORT).show()
 
         return addressList[0].locality
     }
