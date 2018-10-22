@@ -41,7 +41,6 @@ class MapsActivity : AppCompatActivity() {
         navigation.visibility = View.VISIBLE
         loading.visibility = View.GONE
         container.visibility = View.VISIBLE
-        println("*** showMap")
     }
 
 
@@ -50,7 +49,6 @@ class MapsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_maps)
 
         init()
-
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
 //        val mapFragment = supportFragmentManager
@@ -81,10 +79,6 @@ class MapsActivity : AppCompatActivity() {
     private fun switchContent() {
         val transaction = manager
                 .beginTransaction()
-//                .setCustomAnimations(
-//                        android.R.anim.fade_in, android.R.anim.fade_out)
-
-
         when (type) {
             FragmentType.Map -> {
                 if (!mapFragment!!.isAdded) {
@@ -128,8 +122,6 @@ class MapsActivity : AppCompatActivity() {
             builder.include(LatLng(list[i].x.toDouble(), list[i].y.toDouble()))
             boundsList.add(builder.build())
         }
-        Log.wtf("aaaaa", boundsList.toString())
-
     }
 
 

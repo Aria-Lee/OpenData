@@ -5,12 +5,9 @@ import android.widget.Toast
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
-import kotlin.reflect.KFunction
 
 class MyOkHttp(val context: Context) {
 
-//    lateinit var jsonObjectRain: JSONObject
-//    lateinit var jsonObjectDengue: JSONObject
 
     fun request(url: String, request: String, cb: (String, JSONObject) -> Unit, type: String) {
 

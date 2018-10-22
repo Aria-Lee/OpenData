@@ -4,17 +4,13 @@ package com.example.river.opendata.fragments
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.PopupWindow
-import android.widget.TextView
 import android.widget.Toast
 import com.example.river.opendata.DataHelper
 import com.example.river.opendata.R
@@ -23,23 +19,17 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.android.gms.maps.model.PolygonOptions
-import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.Marker
-import kotlinx.android.synthetic.main.activity_maps.*
+import com.google.android.gms.maps.model.*
 
 
-class MapFragment() : SupportMapFragment(), OnMapReadyCallback {
+class MapFragment : SupportMapFragment(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private var marker: Marker? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return super.onCreateView(inflater, container, savedInstanceState)
-        //return inflater.inflate(R.layout.fragment_map, container, false)
+//        return inflater.inflate(R.layout.fragment_map, container, false)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,7 +75,7 @@ class MapFragment() : SupportMapFragment(), OnMapReadyCallback {
         val jsonString = DataHelper.getJSONString(resources.openRawResource(R.raw.gml_json))
 
         addPolygons(DataHelper.getList(jsonString))
-
+//        addPolygons(AllDistricts.list)
         mMap.moveCamera(
                 CameraUpdateFactory.newLatLngZoom(
                         LatLng(
@@ -154,7 +144,7 @@ class MapFragment() : SupportMapFragment(), OnMapReadyCallback {
             polygon.tag = DataHelper.districtList[i]
         }
     }
-    
+
     lateinit var callBack: () -> Unit
     fun addCallBack(callBack: () -> Unit) {
         println("*** addCallBack")

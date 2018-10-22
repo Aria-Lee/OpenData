@@ -14,41 +14,67 @@ import org.json.JSONObject
 
 
 class ShowSubChart : AppCompatActivity() {
-    //    lateinit var okHttpRain: MyOkHttp
-//    lateinit var okHttpDengue: MyOkHttp
-    lateinit var okHttp: MyOkHttp
 
-    var barEntries = ArrayList<BarEntry>()
-    var lineEntries = ArrayList<Entry>()
+    private lateinit var okHttp: MyOkHttp
+    private lateinit var district: String
 
-    var barMaxValue: Float = 0f
-    var rainMaxValue: Float = 0f
-    var rainMinValue: Float = 0f
+    //View sets
+    private var year: String = ""
+    private var month: Int = 0
+    private var requestString = ""
+
+    //Chart sets
+    private var barEntries = ArrayList<BarEntry>()
+    private var lineEntries = ArrayList<Entry>()
+    private var barMaxValue: Float = 0f
+    private var rainMaxValue: Float = 0f
+    private var rainMinValue: Float = 0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.sub_chart)
-//        okHttpRain = MyOkHttp(this)
-//        okHttpDengue = MyOkHttp(this)
+
         okHttp = MyOkHttp(this)
 
+        district = intent.getStringExtra("district")
 
         this.title = intent.getStringExtra("district")
 
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         spinnerInit()
 
-        requestData("dengue", "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/dengue")
+        button.setOnClickListener {
+            //{"year":"2018", "month":"10", "district":"東區"}
 
+            chart.clear()
+
+            year = year_spinner.selectedItem.toString()
+            month = month_spinner.selectedItemPosition
+
+            val url = "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/dengue"
+
+            var jsonObject = JSONObject()
+            jsonObject.put("year", year)
+            if (month != 0) {
+                jsonObject.put("month", month.toString())
+            }
+            jsonObject.put("district", district)
+            requestString = jsonObject.toString()
+
+            Toast.makeText(this, "$requestString", Toast.LENGTH_LONG).show()
+
+            requestData("dengue", url)
+        }
 
 
     }
 
     fun requestData(type: String, url: String) {
+
         Thread {
             okHttp.request(
                     url,
-                    "{\"year\":\"2015\", \"month\":\"10\", \"district\":\"安南區\"}\n",
+                    requestString,
                     ::callBack,
                     type
             )
@@ -58,20 +84,17 @@ class ShowSubChart : AppCompatActivity() {
     fun callBack(type: String, jsonObject: JSONObject) {
         if (okHttp.isSuccess(jsonObject)) {
 
-            println("*** ${System.nanoTime()} $type")
+//            println("*** ${System.nanoTime()} $type")
 
             when (type) {
                 "dengue" -> {
-//                    println("*** dengue $jsonObject")
                     barEntries = getDataList(type, okHttp.getJSONObjectData(jsonObject)) as ArrayList<BarEntry>
-                    requestData("rain", "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/rainfall")
+                    val url = "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/rainfall"
+                    requestData("rain", url)
                 }
                 "rain" -> {
-//                    println("*** rain $jsonObject")
                     lineEntries = getDataList(type, okHttp.getJSONObjectData(jsonObject)) as ArrayList<Entry>
                     val data = CombinedData()
-//        chart_line.data = getLineData()
-//        chart_line.data = generateBarData()
                     data.setData(getLineData())
                     data.setData(generateBarData())
 
