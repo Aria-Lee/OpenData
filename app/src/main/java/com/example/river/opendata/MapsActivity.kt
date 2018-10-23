@@ -130,19 +130,19 @@ class MapsActivity : AppCompatActivity() {
         for (i in 0..APoints.size - 1) {
             val p1 = APoints.get(i)
             val p2 = APoints.get((i + 1) % APoints.size)
-            // 求解 y=p.y 与 p1p2 的交点
-            if (p1.longitude == p2.longitude)      // p1p2 与 y=p0.y平行
+            // 求解 y=p.y 與 p1p2 的交點
+            if (p1.longitude == p2.longitude)      // p1p2 與 y=p0.y平行
                 continue;
-            if (point.longitude < Math.min(p1.longitude, p2.longitude))   // 交点在p1p2延长线上
+            if (point.longitude < Math.min(p1.longitude, p2.longitude))   // 交點在p1p2延長線上
                 continue;
-            if (point.longitude >= Math.max(p1.longitude, p2.longitude))   // 交点在p1p2延长线上
+            if (point.longitude >= Math.max(p1.longitude, p2.longitude))   // 交點在p1p2延長線上
                 continue;
-            // 求交点的 X 坐标 --------------------------------------------------------------
+            // 求交點的 X 坐標 --------------------------------------------------------------
             val x = (point.longitude - p1.longitude) * (p2.latitude - p1.latitude) / (p2.longitude - p1.longitude) + p1.latitude
             if (x > point.latitude)
-                nCross++; // 只统计单边交点
+                nCross++; // 只統計單邊交點
         }
-        // 单边交点为偶数，点在多边形之外 ---
+        // 單邊交點為偶數，點在多邊形之外 ---
         return (nCross % 2 == 1)
     }
 }

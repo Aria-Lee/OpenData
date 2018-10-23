@@ -186,4 +186,3 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback {
         return addressList[0].locality
     }
 }
-

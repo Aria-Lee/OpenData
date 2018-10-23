@@ -45,7 +45,9 @@ class ShowSubChart : AppCompatActivity() {
 
         button.setOnClickListener {
             //{"year":"2018", "month":"10", "district":"東區"}
-
+            barMaxValue = 0f
+            rainMaxValue = 0f
+            rainMinValue = 0f
             chart.clear()
 
             year = year_spinner.selectedItem.toString()
@@ -66,7 +68,7 @@ class ShowSubChart : AppCompatActivity() {
             requestData("dengue", url)
         }
 
-
+        button.performClick()
     }
 
     fun requestData(type: String, url: String) {
