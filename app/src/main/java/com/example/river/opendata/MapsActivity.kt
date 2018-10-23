@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.example.river.opendata.fragments.ChartFragment
 import com.example.river.opendata.fragments.MapFragment
@@ -24,14 +25,13 @@ class MapsActivity : AppCompatActivity() {
     var type = FragmentType.Map
     val manager = this.supportFragmentManager
 
-
     fun init() {
         initFragments()
         supportActionBar?.hide()
         navigation.visibility = View.GONE
         container.visibility = View.GONE
         Glide.with(this).load(R.drawable.mosquito_clipart_animation).into(loading)
-        mapFragment!!.getMapAsync(mapFragment)
+//        mapFragment!!.getMapAsync(mapFragment)
         switchContent()
     }
 
@@ -49,7 +49,6 @@ class MapsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_maps)
 
         init()
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
 //        val mapFragment = supportFragmentManager
 //                .findFragmentById(R.id.map) as SupportMapFragment
@@ -146,3 +145,4 @@ class MapsActivity : AppCompatActivity() {
         return (nCross % 2 == 1)
     }
 }
+
