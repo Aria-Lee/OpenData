@@ -12,12 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/navigation"
-<<<<<<< HEAD
         app:layout_constraintTop_toTopOf="parent" />
-=======
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="0dp" />
->>>>>>> 2fb4e3ad14d0935d4aeb68185dcea9582c2eacbd
+
 
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/navigation"
