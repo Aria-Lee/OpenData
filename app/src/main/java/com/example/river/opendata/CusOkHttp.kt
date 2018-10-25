@@ -10,35 +10,52 @@ class CusOkHttp(val context: Context) {
 
     lateinit var okHttpClient: OkHttpClient
     lateinit var jsonObject: JSONObject
+    var runnableNow = 0
 
-    fun request(url: String, requestString: String, cb: (JSONObject) -> Unit) {
+    var taskQueue = mutableListOf<CusTask>()
+
+    fun request(cusTask: CusTask) {
 
         okHttpClient = OkHttpClient()
 
         val requestBuilder = Request.Builder()
         val JSON = MediaType.parse("application/json; charset=utf-8")
-
-        val body = RequestBody.create(JSON, requestString)
-
+        val body = RequestBody.create(JSON, cusTask.requestString)
         val request = requestBuilder
-                .url(url)
+                .url(cusTask.url)
                 .post(body)
                 .build()
 
         val call = okHttpClient.newCall(request)
+
         call.enqueue(object : Callback {
+
             override fun onFailure(call: Call, e: IOException) {
-                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
             }
 
             override fun onResponse(call: Call, response: Response) {
                 jsonObject = JSONObject(response.body()!!.string())
-
-                cb.invoke(jsonObject)
+                if (isSuccess(jsonObject)) {
+                    cusTask.requestCallback.invoke(jsonObject)
+                    if (runnableNow < taskQueue.size) {
+                        request(taskQueue[runnableNow++])
+                    }
+                } else {
+                    val msg = jsonObject.getString("data")
+                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                }
             }
         })
     }
 
+    fun addCusTask(cusTask: CusTask) {
+        taskQueue.add(cusTask)
+    }
+
+    fun startTasks() {
+        request(taskQueue[0])
+    }
 
     fun isSuccess(jsonObject: JSONObject): Boolean {
         return jsonObject.getString("result").toBoolean()

@@ -71,34 +71,34 @@ class ChartFragment : Fragment() {
     fun requestAllDengueValue() {
         val url = "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/dengue"
 
-        for (i in 2015..2016) {
-            Thread {
-                okHttp.request(
-                        url,
-                        "{\"year\":\"$i\"}",
-                        { jsonObject ->
-                            addAYearDengueValueToList(jsonObject, i.toFloat())
-                        }
-                )
-            }.start()
-        }
+//        for (i in 2015..2016) {
+//            Thread {
+//                okHttp.request(
+//                        url,
+//                        "{\"year\":\"$i\"}",
+//                        { jsonObject ->
+//                            addAYearDengueValueToList(jsonObject, i.toFloat())
+//                        }
+//                )
+//            }.start()
+//        }
     }
 
     fun requestAllRainValue() {
         val url = "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/rainfall"
-
-        for (i in 2015..2016) {
-            Thread {
-                okHttp.request(
-                        url,
-                        "{\"year\":\"$i\"}",
-                        { jsonObject ->
-
-                            addAYearRainValueToList(jsonObject, i.toFloat())
-                        }
-                )
-            }.start()
-        }
+//
+//        for (i in 2015..2016) {
+//            Thread {
+//                okHttp.request(
+//                        url,
+//                        "{\"year\":\"$i\"}",
+//                        { jsonObject ->
+//
+//                            addAYearRainValueToList(jsonObject, i.toFloat())
+//                        }
+//                )
+//            }.start()
+//        }
     }
 
     fun checkResponsesStandBy() {

@@ -49,9 +49,6 @@ class MapsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_maps)
 
         init()
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-//        val mapFragment = supportFragmentManager
-//                .findFragmentById(R.id.map) as SupportMapFragment
 
         navigation.setOnNavigationItemSelectedListener {
             when (it.itemId) {
@@ -122,7 +119,6 @@ class MapsActivity : AppCompatActivity() {
             boundsList.add(builder.build())
         }
     }
-
 
     fun PtInPolygon(point: LatLng, APoints: MutableList<LatLng>): Boolean {
         var nCross = 0
