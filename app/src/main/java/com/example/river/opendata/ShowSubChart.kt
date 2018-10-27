@@ -4,10 +4,14 @@ import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
+import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.ImageView
+import com.bumptech.glide.Glide
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.*
+import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.android.synthetic.main.sub_chart.*
 import org.json.JSONObject
 
@@ -31,6 +35,12 @@ class ShowSubChart : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.sub_chart)
+        Glide.with(this).load(R.drawable.loading_icon).into(loading_icon)
+
+
+//        loading_icon.visibility = View.VISIBLE
+//        Glide.with(this).load(R.drawable.loading_icon).into(loading_icon)
+
 
         okHttp = CusOkHttp(this)
 
@@ -44,6 +54,9 @@ class ShowSubChart : AppCompatActivity() {
         button.setOnClickListener {
             resetValue()
 
+            chart.visibility = View.GONE
+            loading_icon.visibility = View.VISIBLE
+
             year = year_spinner.selectedItem.toString()
             month = month_spinner.selectedItemPosition
 
@@ -51,6 +64,20 @@ class ShowSubChart : AppCompatActivity() {
             okHttp.addCusTask(getRainTask())
             okHttp.startTasks()
         }
+
+        button.performClick()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+
+        when (item!!.itemId) {
+            android.R.id.home -> {
+//                onBackPressed()
+                this.finish()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private fun getDengueTask(): CusTask {
@@ -96,10 +123,16 @@ class ShowSubChart : AppCompatActivity() {
     private fun getRainList(jsonObject: JSONObject): ArrayList<Entry> {
         val list = ArrayList<Entry>()
         for (i in jsonObject.keys()) {
+
             val value = jsonObject.getString(i).toFloatOrNull() ?: 0f
+
             rainMaxValue = if (value > rainMaxValue) value else rainMaxValue
             rainMinValue = if (value < rainMinValue) value else rainMinValue
+
+            println("111 ${i}, $rainMaxValue, $rainMinValue")
+
             list.add(Entry(i.toFloat(), value))
+
         }
         return list
     }
@@ -122,7 +155,11 @@ class ShowSubChart : AppCompatActivity() {
     private fun generateLineData(): LineData {
 
         for (i in lineEntries) {
-            i.y = barMaxValue + (((i.y - rainMinValue) * 2 * (barMaxValue / 5)) / (rainMaxValue - rainMinValue)) + rainMinValue
+            if ((rainMaxValue - rainMinValue) == 0f) {
+                i.y = (barMaxValue)
+            } else {
+                i.y = (barMaxValue) + (((i.y - rainMinValue) * 2 * (barMaxValue / 5)) / (rainMaxValue - rainMinValue))
+            }
         }
 
         val dataSetA = LineDataSet(lineEntries, "雨量(mm)")
@@ -146,6 +183,11 @@ class ShowSubChart : AppCompatActivity() {
         chart.data = data
 
         chart.invalidate()
+
+        runOnUiThread{
+            chart.visibility = View.VISIBLE
+            loading_icon.visibility = View.GONE
+        }
     }
 
     private fun resetValue() {
@@ -173,18 +215,5 @@ class ShowSubChart : AppCompatActivity() {
         year_spinner.adapter = yearList
         month_spinner.adapter = monthList
     }
-
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        println("*** ${item!!.itemId}")
-        when (item!!.itemId) {
-            android.R.id.home -> {
-//                onBackPressed()
-                this.finish()
-                return true
-            }
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
 
 }

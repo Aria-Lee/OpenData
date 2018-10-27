@@ -11,8 +11,6 @@ class Formatter(val barMaxValue: Float, val rainMaxValue: Float, val rainMinValu
 
     override fun getFormattedValue(value: Float, entry: Entry, dataSetIndex: Int, viewPortHandler: ViewPortHandler): String {
         // write your logic here
-
-        println("*** dataSetIndex: $dataSetIndex")
         //var v = value - barMaxValue
 
         var v = (value - barMaxValue - rainMinValue) * (rainMaxValue - rainMinValue) / (barMaxValue / 5) / 2 + rainMinValue
