@@ -37,11 +37,6 @@ class ShowSubChart : AppCompatActivity() {
         setContentView(R.layout.sub_chart)
         Glide.with(this).load(R.drawable.loading_icon).into(loading_icon)
 
-
-//        loading_icon.visibility = View.VISIBLE
-//        Glide.with(this).load(R.drawable.loading_icon).into(loading_icon)
-
-
         okHttp = CusOkHttp(this)
 
         district = intent.getStringExtra("district")
@@ -65,7 +60,9 @@ class ShowSubChart : AppCompatActivity() {
             okHttp.startTasks()
         }
 
-        button.performClick()
+        //button.performClick()
+        chart.visibility = View.GONE
+        loading_icon.visibility = View.GONE
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {

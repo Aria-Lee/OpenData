@@ -31,7 +31,8 @@ class CusOkHttp(val context: Context) {
         call.enqueue(object : Callback {
 
             override fun onFailure(call: Call, e: IOException) {
-                Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
+                //Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
+                println("777 ${e.message}")
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -43,10 +44,15 @@ class CusOkHttp(val context: Context) {
                     }
                 } else {
                     val msg = jsonObject.getString("data")
-                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                    //Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                    println("777 $msg")
                 }
             }
         })
+    }
+
+    fun cancelAll() {
+        okHttpClient.dispatcher().cancelAll()
     }
 
     fun addCusTask(cusTask: CusTask) {

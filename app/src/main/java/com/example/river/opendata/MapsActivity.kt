@@ -3,9 +3,7 @@ package com.example.river.opendata
 import android.graphics.PointF
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.View
-import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.example.river.opendata.fragments.ChartFragment
 import com.example.river.opendata.fragments.MapFragment
@@ -16,37 +14,25 @@ import kotlinx.android.synthetic.main.activity_maps.*
 
 class MapsActivity : AppCompatActivity() {
 
-
     enum class FragmentType {
         Map,
         Chart
     }
 
-    var type = FragmentType.Map
-    val manager = this.supportFragmentManager
-
-    fun init() {
-        initFragments()
-        supportActionBar?.hide()
-        navigation.visibility = View.GONE
-        container.visibility = View.GONE
-        Glide.with(this).load(R.drawable.mosquito_clipart_animation).into(loading)
-//        mapFragment!!.getMapAsync(mapFragment)
-        switchContent()
-    }
-
-    fun showMap(){
-        switchContent()
-        supportActionBar?.show()
-        navigation.visibility = View.VISIBLE
-        loading.visibility = View.GONE
-        container.visibility = View.VISIBLE
-    }
-
+    private var type = FragmentType.Map
+    private val manager = this.supportFragmentManager
+    private var mapFragment: MapFragment? = null
+    private var chartFragment: ChartFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_maps)
+
+        Glide.with(this).load(R.drawable.mosquito_clipart_animation).into(loading)
+    }
+
+    override fun onStart() {
 
         init()
 
@@ -62,15 +48,36 @@ class MapsActivity : AppCompatActivity() {
                     return@setOnNavigationItemSelectedListener false
                 }
             }
-
             switchContent()
             true
         }
 
+        super.onStart()
     }
 
-    private var mapFragment: MapFragment? = null
-    private var chartFragment: ChartFragment? = null
+    private fun init() {
+        MapResponseData.preAddData()
+        initFragments()
+        supportActionBar?.hide()
+        switchContent()
+    }
+
+    private fun initFragments() {
+
+        if (mapFragment == null) {
+            mapFragment = MapFragment()
+            mapFragment!!.addCallBack(::hideLoadingImage)
+        }
+
+        if (chartFragment == null) {
+            chartFragment = ChartFragment()
+        }
+    }
+
+    private fun hideLoadingImage() {
+        loading.visibility = View.GONE
+        supportActionBar?.show()
+    }
 
     private fun switchContent() {
         val transaction = manager
@@ -98,23 +105,11 @@ class MapsActivity : AppCompatActivity() {
         }
     }
 
-    fun initFragments(){
-
-        if (mapFragment == null) {
-            mapFragment = MapFragment()
-            mapFragment!!.addCallBack(::showMap)
-        }
-
-        if (chartFragment == null) {
-            chartFragment = ChartFragment()
-        }
-    }
-
     var boundsList = mutableListOf<LatLngBounds>()
 
     fun bounds(list: MutableList<PointF>) {
-        var builder = LatLngBounds.Builder()
-        for (i in 0..list.size - 1) {
+        val builder = LatLngBounds.Builder()
+        for (i in 0 until list.size) {
             builder.include(LatLng(list[i].x.toDouble(), list[i].y.toDouble()))
             boundsList.add(builder.build())
         }
