@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.location.Address
 import android.location.Geocoder
+import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.util.Log
@@ -16,6 +17,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import com.example.river.opendata.*
+import com.example.river.opendata.DataHelper.Companion.getList
 import com.example.river.opendata.R
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
@@ -42,13 +44,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
         okHttp = CusOkHttp(this.context!!)
-
         MapsInitializer.initialize(this.context)
         makeMarkerIcon()
-
-        super.onCreate(savedInstanceState)
     }
 
     private fun getDengueTask(year: Int): CusTask {
@@ -59,26 +59,14 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 JSONObject().put("year", year).toString()
         ) {
             MapResponseData.addData(year, it.getJSONObject("data"))
+
+            MapResponseData.removeAfterGetResponse(year)
             if (marker != null) {
                 val value = MapResponseData.getDengueValue(year, district!!)
                 (context as MapsActivity).runOnUiThread {
                     addMarker(marker!!.position, value)
                 }
-            } else {
-                println("123 $year data downloaded.")
-                //okHttp.removeQueue(year)
-                okHttp.clearQueue()
-                MapResponseData.removeAfterGetResponse(year)
-
-                val noDataYear = MapResponseData.checkAllDatas()
-
-                if (noDataYear != null) {
-                    okHttp.addCusTask(getDengueTask(noDataYear))
-                    okHttp.startTasks()
-                    println("123 call start request ${okHttp.taskQueue}, $noDataYear data")
-                }
             }
-
         }
     }
 
@@ -114,20 +102,17 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     val value = MapResponseData.getDengueValue(year, district!!)
                     addMarker(marker!!.position, value)
                 }
-            }else{
-                //移除 Marker
-                removeMarker()
-                //停止目前 request
-                okHttp.cancelAll()
-                //重新請求
-//                okHttp.addCusTask(getDengueTask(year))
-//                okHttp.startTasks()
-
-                val noDataYear = MapResponseData.checkAllDatas()
-                if (noDataYear != null) {
-                    okHttp.addCusTask(getDengueTask(noDataYear))
+            } else {
+                if (data == null) {
+                    //停止目前 request
+                    okHttp.cancelAll()
+                    //重新請求
+                    //把選擇的年放到第一個
+                    MapResponseData.moveYearToFirst(year)
+                    for (i in MapResponseData.waitForRemoveList) {
+                        okHttp.addCusTask(getDengueTask(i))
+                    }
                     okHttp.startTasks()
-                    println("123 onItemSelected start request $noDataYear data")
                 }
             }
         }
@@ -135,84 +120,111 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        try {
-            // Customise the styling of the base map using a JSON object defined
-            // in a raw resource file.
-            val success = mMap.setMapStyle(
-                    MapStyleOptions.loadRawResourceStyle(
-                            this.context, R.raw.style_json))
-            if (!success) {
-                Log.e("aaaaa", "Style parsing failed.")
-            }
-        } catch (e: Resources.NotFoundException) {
-            Log.e("aaaaa", "Can't find style. Error: ", e)
-        }
 
-        val bounds =
-                LatLngBounds(LatLng(23.091185, 120.228257), LatLng(23.450089, 120.665024))
-        mMap.setLatLngBoundsForCameraTarget(bounds)
-        mMap.setMinZoomPreference(10.0f)
+        val task = object : AsyncTask<Void, ProgressData, Unit>() {
+            override fun onPreExecute() {
 
-        val jsonString = DataHelper.getJSONString(resources.openRawResource(R.raw.gml_json))
 
-        addPolygons(DataHelper.getList(jsonString))
-
-        mMap.moveCamera(
-                CameraUpdateFactory.newLatLngZoom(
-                        LatLng(
-                                23.000947952270508,
-                                120.14522552490234),
-                        10.0f))
-
-        mMap.setOnMapLongClickListener {
-            val year = thisView.all_year_spinner.selectedItem.toString().toInt()
-
-            //還沒有資料
-            if (!MapResponseData.isDataCreated(year)) {
-                println("123 setOnMapLongClickListener")
-                okHttp.cancelAll()
-                okHttp.addCusTask(getDengueTask(year))
-                okHttp.startTasks()
-                return@setOnMapLongClickListener
             }
 
-            //有資料
-            removeMarker()
-            val district = getDistrict(it)
+            override fun doInBackground(vararg params: Void?): Unit {
+                try {
+                    // Customise the styling of the base map using a JSON object defined
+                    // in a raw resource file.
+                    val res = MapStyleOptions.loadRawResourceStyle(context, R.raw.style_json)
+                    activity!!.runOnUiThread {
+                        mMap.setMapStyle(res)
+                    }
+                } catch (e: Resources.NotFoundException) {
+                    Log.e("aaaaa", "Can't find style. Error: ", e)
+                }
 
-            if (district != null) {
-                val value = MapResponseData.getDengueValue(year, district)
-                addMarker(it, value)
+                val jsonString = DataHelper.getJSONString(resources.openRawResource(R.raw.gml_json))
+
+                val list = DataHelper.getList(jsonString)
+                for (i in 0 until list.size) {
+//                    Thread.sleep(10)
+
+                    publishProgress(ProgressData(i, list[i]))
+                }
+                return Unit
             }
+
+            override fun onProgressUpdate(vararg data: ProgressData) {
+//                var list = values
+//                addPolygon(data.index, values.asList().toMutableList())
+                var progressData = data[0] as ProgressData
+                addPolygon(progressData.index, progressData.list)
+            }
+
+            override fun onPostExecute(result: Unit) {
+
+                val bounds =
+                        LatLngBounds(LatLng(23.091185, 120.228257), LatLng(23.450089, 120.665024))
+                mMap.setLatLngBoundsForCameraTarget(bounds)
+                mMap.setMinZoomPreference(10.0f)
+
+                mMap.moveCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                                LatLng(
+                                        23.000947952270508,
+                                        120.14522552490234),
+                                10.0f))
+
+                mMap.setOnMapLongClickListener {
+                    val year = thisView.all_year_spinner.selectedItem.toString().toInt()
+
+                    //還沒有資料
+                    if (!MapResponseData.isDataCreated(year)) {
+                        okHttp.cancelAll()
+                        okHttp.addCusTask(getDengueTask(year))
+                        okHttp.startTasks()
+                        return@setOnMapLongClickListener
+                    }
+
+                    //有資料
+                    removeMarker()
+                    val district = getDistrict(it)
+
+                    if (district != null) {
+                        val value = MapResponseData.getDengueValue(year, district)
+                        addMarker(it, value)
+                    }
+                }
+
+                mMap.setOnMapClickListener {
+                    removeMarker()
+                }
+
+                mMap.setOnPolygonClickListener {
+                    removeMarker()
+                    val intent = Intent(context, ShowSubChart::class.java)
+
+                    intent.putExtra("district", it.tag.toString())
+
+                    startActivity(intent)
+                }
+
+                mMap.setOnMarkerClickListener { p0 ->
+                    removeMarker()
+                    val district = getDistrict(p0!!.position)
+                    val intent = Intent(context, ShowSubChart::class.java)
+                    intent.putExtra("district", district)
+                    startActivity(intent)
+                    false
+                }
+
+                //完全載入事件
+                mMap.setOnMapLoadedCallback {
+                    callBack.invoke()
+                }
+
+
+            }
+
         }
 
-        mMap.setOnMapClickListener {
-            removeMarker()
-        }
-
-        mMap.setOnPolygonClickListener {
-            removeMarker()
-            val intent = Intent(this.context, ShowSubChart::class.java)
-            intent.putExtra("district", it.tag.toString())
-            startActivity(intent)
-        }
-
-        mMap.setOnMarkerClickListener { p0 ->
-            removeMarker()
-            val district = getDistrict(p0!!.position)
-            val intent = Intent(context, ShowSubChart::class.java)
-            intent.putExtra("district", district)
-            startActivity(intent)
-            false
-        }
-
-        //完全載入事件
-        mMap.setOnMapLoadedCallback {
-            this.callBack.invoke()
-            println("*** Map Loaded")
-        }
-
-        println("*** Map Ready")
+        task.execute()
     }
 
     private fun addPolygons(list: MutableList<MutableList<LatLng>>) {
@@ -229,12 +241,33 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     polygonOptions
                             .strokeWidth(5f)
                             .strokeColor(Color.rgb(0, 163, 11))
-                            .fillColor(Color.argb(100,0, 224, 15))
+                            .fillColor(Color.argb(100, 0, 224, 15))
             )
             polygon.isClickable = true
+            var aa = DataHelper.districtList[i]
+
             polygon.tag = DataHelper.districtList[i]
         }
     }
+
+    private fun addPolygon(i: Int, list: MutableList<LatLng>) {
+        val polygonOptions = PolygonOptions()
+
+        for (j in list) {
+            polygonOptions.add(j)
+        }
+
+        val polygon = mMap.addPolygon(
+                polygonOptions
+                        .strokeWidth(5f)
+                        .strokeColor(Color.rgb(0, 163, 11))
+                        .fillColor(Color.argb(100, 0, 224, 15))
+        )
+        polygon.isClickable = true
+
+        polygon.tag = DataHelper.districtList[i]
+    }
+
 
     private fun addMarker(latLng: LatLng, value: String) {
         district = getDistrict(latLng)
@@ -280,3 +313,5 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         this.callBack = callBack
     }
 }
+
+class ProgressData(var index: Int, var list: MutableList<LatLng>)

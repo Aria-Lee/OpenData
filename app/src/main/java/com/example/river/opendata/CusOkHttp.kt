@@ -10,7 +10,6 @@ class CusOkHttp(val context: Context) {
 
     var okHttpClient: OkHttpClient? = null
     lateinit var jsonObject: JSONObject
-    var runnableNow = 0
 
     var taskQueue = mutableListOf<CusTask>()
 
@@ -31,21 +30,21 @@ class CusOkHttp(val context: Context) {
         call.enqueue(object : Callback {
 
             override fun onFailure(call: Call, e: IOException) {
-                //Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
-                println("777 ${e.message}")
+                println("onFailure ${e.message}")
             }
 
             override fun onResponse(call: Call, response: Response) {
                 jsonObject = JSONObject(response.body()!!.string())
+                taskQueue.remove(cusTask)
+
                 if (isSuccess(jsonObject)) {
                     cusTask.requestCallback.invoke(jsonObject)
-//                    if (runnableNow < taskQueue.size) {
-//                        request(taskQueue[runnableNow++])
-//                    }
+                    if (taskQueue.size != 0) {
+                        request(taskQueue[0])
+                    }
                 } else {
                     val msg = jsonObject.getString("data")
-                    //Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                    println("$msg")
+                    println("false $msg")
                 }
             }
         })
@@ -64,18 +63,6 @@ class CusOkHttp(val context: Context) {
         request(taskQueue[0])
     }
 
-    fun removeQueue(year: Int) {
-        var cusTask: CusTask? = null
-        for (i in taskQueue) {
-            if (i.year == year) {
-                cusTask = i
-            }
-        }
-        if (cusTask != null) {
-            taskQueue.remove(cusTask)
-        }
-    }
-
     fun clearQueue() {
         taskQueue.clear()
     }
@@ -83,18 +70,5 @@ class CusOkHttp(val context: Context) {
     fun isSuccess(jsonObject: JSONObject): Boolean {
         return jsonObject.getString("result").toBoolean()
     }
-
-    fun getFloatData(jsonObject: JSONObject): Float {
-        return jsonObject.getString("data").toFloat()
-    }
-
-    fun getJSONObjectData(jsonObject: JSONObject): JSONObject {
-        return JSONObject(jsonObject.getString("data"))
-    }
-
-    fun getStringData(jsonObject: JSONObject): String {
-        return jsonObject.getString("data")
-    }
-
 
 }

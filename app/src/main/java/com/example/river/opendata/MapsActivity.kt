@@ -1,10 +1,16 @@
 package com.example.river.opendata
 
 import android.graphics.PointF
+import android.graphics.drawable.Drawable
+import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.example.river.opendata.fragments.ChartFragment
 import com.example.river.opendata.fragments.MapFragment
 import com.google.android.gms.maps.model.LatLng
@@ -28,10 +34,24 @@ class MapsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_maps)
-        Glide.with(this).load(R.drawable.mosquito_clipart_animation).into(loading)
+        Glide
+                .with(this)
+                .load(R.drawable.mosquito_clipart_animation)
+                .addListener(object :RequestListener<Drawable>{
+                    override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?, dataSource: DataSource?, isFirstResource: Boolean): Boolean {
+                        initView()
+                        return false
+                    }
+
+                    override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<Drawable>?, isFirstResource: Boolean): Boolean {
+                        return true
+                    }
+                })
+                .into(loading)
+
     }
 
-    override fun onStart() {
+    private fun initView() {
 
         init()
 
@@ -50,12 +70,9 @@ class MapsActivity : AppCompatActivity() {
             switchContent()
             true
         }
-
-        super.onStart()
     }
 
     private fun init() {
-
         MapResponseData.preAddData()
         initFragments()
         supportActionBar?.hide()
@@ -80,6 +97,7 @@ class MapsActivity : AppCompatActivity() {
     }
 
     private fun switchContent() {
+
         val transaction = manager
                 .beginTransaction()
         when (type) {

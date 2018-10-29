@@ -42,11 +42,16 @@ class MapResponseData {
             }
         }
 
-        fun removeAfterGetResponse(year: Int){
+        fun removeAfterGetResponse(year: Int) {
             waitForRemoveList.remove(year)
         }
 
-        fun checkAllDatas(): Int? {
+        fun moveYearToFirst(year: Int) {
+            waitForRemoveList.remove(year)
+            waitForRemoveList.add(0, year)
+        }
+
+        fun checkAllDatas(): MutableList<Int>? {
 //            val arry = mutableListOf(2015, 2016, 2017, 2018)
 //            var arryNow = mutableListOf<Int>()
 //            for (i in dataList.keys) {
@@ -60,11 +65,10 @@ class MapResponseData {
 //                null
 //            }
             return if (waitForRemoveList.size != 0) {
-                waitForRemoveList[0]
+                return waitForRemoveList
             } else {
                 null
             }
         }
     }
-
 }

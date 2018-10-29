@@ -48,7 +48,6 @@ class ShowSubChart : AppCompatActivity() {
         button.setOnClickListener {
             resetValue()
 
-//            chart.visibility = View.GONE
             progressBar.visibility = View.VISIBLE
 
             year = year_spinner.selectedItem.toString()
@@ -59,7 +58,6 @@ class ShowSubChart : AppCompatActivity() {
             okHttp.startTasks()
         }
 
-        //button.performClick()
         chart.visibility = View.GONE
         progressBar.visibility = View.GONE
     }
