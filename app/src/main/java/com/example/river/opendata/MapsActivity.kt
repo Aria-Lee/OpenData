@@ -28,7 +28,6 @@ class MapsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_maps)
-
         Glide.with(this).load(R.drawable.mosquito_clipart_animation).into(loading)
     }
 
@@ -56,6 +55,7 @@ class MapsActivity : AppCompatActivity() {
     }
 
     private fun init() {
+
         MapResponseData.preAddData()
         initFragments()
         supportActionBar?.hide()

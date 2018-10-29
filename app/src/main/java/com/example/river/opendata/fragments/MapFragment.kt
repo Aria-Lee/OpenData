@@ -15,7 +15,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import com.example.river.opendata.*
 import com.example.river.opendata.R
 import com.google.android.gms.maps.*
@@ -31,8 +30,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     lateinit var thisView: View
     lateinit var okHttp: CusOkHttp
     var district: String? = ""
-    var dengue: JSONObject? = null
-    lateinit var markerImage: BitmapDescriptor
+    private lateinit var markerImage: BitmapDescriptor
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -47,11 +45,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         okHttp = CusOkHttp(this.context!!)
 
-        okHttp.addCusTask(getDengueTask(2015))
-//        okHttp.addCusTask(getDengueTask(2016))
-//        okHttp.addCusTask(getDengueTask(2018))
-        okHttp.startTasks()
-
         MapsInitializer.initialize(this.context)
         makeMarkerIcon()
 
@@ -61,24 +54,31 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private fun getDengueTask(year: Int): CusTask {
 
         return CusTask(
+                year,
                 "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/dengue",
                 JSONObject().put("year", year).toString()
         ) {
-            dengue = okHttp.getJSONObjectData(it)
             MapResponseData.addData(year, it.getJSONObject("data"))
             if (marker != null) {
                 val value = MapResponseData.getDengueValue(year, district!!)
                 (context as MapsActivity).runOnUiThread {
                     addMarker(marker!!.position, value)
                 }
+            } else {
+                println("123 $year data downloaded.")
+                //okHttp.removeQueue(year)
+                okHttp.clearQueue()
+                MapResponseData.removeAfterGetResponse(year)
+
+                val noDataYear = MapResponseData.checkAllDatas()
+
+                if (noDataYear != null) {
+                    okHttp.addCusTask(getDengueTask(noDataYear))
+                    okHttp.startTasks()
+                    println("123 call start request ${okHttp.taskQueue}, $noDataYear data")
+                }
             }
 
-            val noDataYear = MapResponseData.checkAllDatas()
-            if (noDataYear != null){
-                okHttp.addCusTask(getDengueTask(noDataYear))
-                okHttp.startTasks()
-            }
-            println("123 $year data downloaded.")
         }
     }
 
@@ -104,10 +104,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
 
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+
             val year = thisView.all_year_spinner.selectedItem.toString().toInt()
-//            requestString = JSONObject().put("year", year).toString()
-//            url = "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/dengue"
-//            requestData("dengue", url)
             val data = MapResponseData.getData(year)
             //有資料，顯示在 Marker 上
             if (marker != null && data != null) {
@@ -116,14 +114,21 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     val value = MapResponseData.getDengueValue(year, district!!)
                     addMarker(marker!!.position, value)
                 }
-            } else {
+            }else{
                 //移除 Marker
                 removeMarker()
                 //停止目前 request
                 okHttp.cancelAll()
                 //重新請求
-                okHttp.addCusTask(getDengueTask(year))
-                okHttp.startTasks()
+//                okHttp.addCusTask(getDengueTask(year))
+//                okHttp.startTasks()
+
+                val noDataYear = MapResponseData.checkAllDatas()
+                if (noDataYear != null) {
+                    okHttp.addCusTask(getDengueTask(noDataYear))
+                    okHttp.startTasks()
+                    println("123 onItemSelected start request $noDataYear data")
+                }
             }
         }
     }
@@ -159,12 +164,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                                 120.14522552490234),
                         10.0f))
 
-
         mMap.setOnMapLongClickListener {
             val year = thisView.all_year_spinner.selectedItem.toString().toInt()
 
             //還沒有資料
             if (!MapResponseData.isDataCreated(year)) {
+                println("123 setOnMapLongClickListener")
                 okHttp.cancelAll()
                 okHttp.addCusTask(getDengueTask(year))
                 okHttp.startTasks()
@@ -222,20 +227,16 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
             val polygon = mMap.addPolygon(
                     polygonOptions
-                            .strokeColor(Color.GREEN)
-                            .fillColor(Color.YELLOW)
+                            .strokeWidth(5f)
+                            .strokeColor(Color.rgb(0, 163, 11))
+                            .fillColor(Color.argb(100,0, 224, 15))
             )
             polygon.isClickable = true
             polygon.tag = DataHelper.districtList[i]
         }
     }
 
-    private lateinit var callBack: () -> Unit
-    fun addCallBack(callBack: () -> Unit) {
-        this.callBack = callBack
-    }
-
-    fun addMarker(latLng: LatLng, value: String) {
+    private fun addMarker(latLng: LatLng, value: String) {
         district = getDistrict(latLng)
 //        try {
 //            dengueNum = dengue!!.getInt(district)
@@ -255,13 +256,13 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         marker!!.showInfoWindow()
     }
 
-    fun removeMarker() {
+    private fun removeMarker() {
         if (marker != null) {
             marker!!.remove()
         }
     }
 
-    fun getDistrict(latLng: LatLng): String? {
+    private fun getDistrict(latLng: LatLng): String? {
         val geoCoder = Geocoder(this.context)
         val addressList: MutableList<Address>
 
@@ -272,5 +273,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
 
         return addressList[0].locality
+    }
+
+    private lateinit var callBack: () -> Unit
+    fun addCallBack(callBack: () -> Unit) {
+        this.callBack = callBack
     }
 }

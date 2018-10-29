@@ -11,8 +11,8 @@ class StackFormatter() : StackedValueFormatter(false, "$", 0) {
     private val mAppendix: String? = null
     private val mFormat: DecimalFormat = DecimalFormat("###,###,##0")
 
-    var stack2015 = listOf(13576, 3529, 5772)
-    var stack2016 = listOf(32, 5, 6)
+    var stack2015 = listOf("其他 13576", "南區 3529", "北區 5772")
+    var stack2016 = listOf("其他 32", "東區 5", "永康區 6")
 
     var firstEntry = 0
     var secondEntry = 0
@@ -39,12 +39,12 @@ class StackFormatter() : StackedValueFormatter(false, "$", 0) {
 
     }
 
-    private fun findValue(vals: FloatArray, value: Float, list: List<Int>): String {
+    private fun findValue(vals: FloatArray, value: Float, list: List<String>): String {
 
         var result = ""
         for (i in 0 until vals.size) {
             if (vals[i] == value) {
-                result = list[i].toString()
+                result = list[i]
             }
         }
 

@@ -6,9 +6,9 @@ class MapResponseData {
 
     companion object {
         var dataList = hashMapOf<Int, JSONObject>()
+        var waitForRemoveList = mutableListOf(2015, 2016, 2018)
 
         fun preAddData() {
-            dataList[2014] = JSONObject("{}")
             dataList[2017] = JSONObject("{}")
         }
 
@@ -42,14 +42,28 @@ class MapResponseData {
             }
         }
 
+        fun removeAfterGetResponse(year: Int){
+            waitForRemoveList.remove(year)
+        }
+
         fun checkAllDatas(): Int? {
-            val arry = arrayOf(2014, 2015, 2016, 2017, 2018)
-            for (i in dataList.keys) {
-                if (i !in arry){
-                    return i
-                }
+//            val arry = mutableListOf(2015, 2016, 2017, 2018)
+//            var arryNow = mutableListOf<Int>()
+//            for (i in dataList.keys) {
+//                arryNow.add(i)
+//            }
+//            arry.removeAll(arryNow)
+//
+//            return if (arry.size != 0) {
+//                arry[0]
+//            } else {
+//                null
+//            }
+            return if (waitForRemoveList.size != 0) {
+                waitForRemoveList[0]
+            } else {
+                null
             }
-            return null
         }
     }
 

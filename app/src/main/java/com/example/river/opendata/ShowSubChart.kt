@@ -35,7 +35,6 @@ class ShowSubChart : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.sub_chart)
-        Glide.with(this).load(R.drawable.loading_icon).into(loading_icon)
 
         okHttp = CusOkHttp(this)
 
@@ -49,8 +48,8 @@ class ShowSubChart : AppCompatActivity() {
         button.setOnClickListener {
             resetValue()
 
-            chart.visibility = View.GONE
-            loading_icon.visibility = View.VISIBLE
+//            chart.visibility = View.GONE
+            progressBar.visibility = View.VISIBLE
 
             year = year_spinner.selectedItem.toString()
             month = month_spinner.selectedItemPosition
@@ -62,7 +61,7 @@ class ShowSubChart : AppCompatActivity() {
 
         //button.performClick()
         chart.visibility = View.GONE
-        loading_icon.visibility = View.GONE
+        progressBar.visibility = View.GONE
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -80,6 +79,7 @@ class ShowSubChart : AppCompatActivity() {
     private fun getDengueTask(): CusTask {
 
         return CusTask(
+                year.toInt(),
                 "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/dengue",
                 getRequestStringFromUI()
         ) {
@@ -108,6 +108,7 @@ class ShowSubChart : AppCompatActivity() {
         jsonObject.put("district", district)
 
         return CusTask(
+                year.toInt(),
                 "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/rainfall",
                 jsonObject.toString()
         ) {
@@ -126,10 +127,7 @@ class ShowSubChart : AppCompatActivity() {
             rainMaxValue = if (value > rainMaxValue) value else rainMaxValue
             rainMinValue = if (value < rainMinValue) value else rainMinValue
 
-            println("111 ${i}, $rainMaxValue, $rainMinValue")
-
             list.add(Entry(i.toFloat(), value))
-
         }
         return list
     }
@@ -181,9 +179,9 @@ class ShowSubChart : AppCompatActivity() {
 
         chart.invalidate()
 
-        runOnUiThread{
+        runOnUiThread {
             chart.visibility = View.VISIBLE
-            loading_icon.visibility = View.GONE
+            progressBar.visibility = View.GONE
         }
     }
 
@@ -191,7 +189,6 @@ class ShowSubChart : AppCompatActivity() {
         barMaxValue = 0f
         rainMaxValue = 0f
         rainMinValue = 0f
-        chart.clear()
     }
 
     private fun getRequestStringFromUI(): String {

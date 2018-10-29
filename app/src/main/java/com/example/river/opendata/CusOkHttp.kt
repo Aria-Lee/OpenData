@@ -8,7 +8,7 @@ import java.io.IOException
 
 class CusOkHttp(val context: Context) {
 
-    lateinit var okHttpClient: OkHttpClient
+    var okHttpClient: OkHttpClient? = null
     lateinit var jsonObject: JSONObject
     var runnableNow = 0
 
@@ -26,7 +26,7 @@ class CusOkHttp(val context: Context) {
                 .post(body)
                 .build()
 
-        val call = okHttpClient.newCall(request)
+        val call = okHttpClient!!.newCall(request)
 
         call.enqueue(object : Callback {
 
@@ -39,20 +39,21 @@ class CusOkHttp(val context: Context) {
                 jsonObject = JSONObject(response.body()!!.string())
                 if (isSuccess(jsonObject)) {
                     cusTask.requestCallback.invoke(jsonObject)
-                    if (runnableNow < taskQueue.size) {
-                        request(taskQueue[runnableNow++])
-                    }
+//                    if (runnableNow < taskQueue.size) {
+//                        request(taskQueue[runnableNow++])
+//                    }
                 } else {
                     val msg = jsonObject.getString("data")
                     //Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                    println("777 $msg")
+                    println("$msg")
                 }
             }
         })
     }
 
     fun cancelAll() {
-        okHttpClient.dispatcher().cancelAll()
+        okHttpClient?.dispatcher()?.cancelAll()
+        clearQueue()
     }
 
     fun addCusTask(cusTask: CusTask) {
@@ -61,6 +62,22 @@ class CusOkHttp(val context: Context) {
 
     fun startTasks() {
         request(taskQueue[0])
+    }
+
+    fun removeQueue(year: Int) {
+        var cusTask: CusTask? = null
+        for (i in taskQueue) {
+            if (i.year == year) {
+                cusTask = i
+            }
+        }
+        if (cusTask != null) {
+            taskQueue.remove(cusTask)
+        }
+    }
+
+    fun clearQueue() {
+        taskQueue.clear()
     }
 
     fun isSuccess(jsonObject: JSONObject): Boolean {
