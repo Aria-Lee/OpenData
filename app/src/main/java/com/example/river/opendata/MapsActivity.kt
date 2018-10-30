@@ -33,7 +33,11 @@ class MapsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        supportActionBar?.hide()
+
         setContentView(R.layout.activity_maps)
+        navigation.visibility = View.GONE
+
         Glide
                 .with(this)
                 .load(R.drawable.mosquito_clipart_animation)
@@ -48,7 +52,6 @@ class MapsActivity : AppCompatActivity() {
                     }
                 })
                 .into(loading)
-
     }
 
     private fun initView() {
@@ -75,7 +78,7 @@ class MapsActivity : AppCompatActivity() {
     private fun init() {
         MapResponseData.preAddData()
         initFragments()
-        supportActionBar?.hide()
+
         switchContent()
     }
 
@@ -94,6 +97,7 @@ class MapsActivity : AppCompatActivity() {
     private fun hideLoadingImage() {
         loading.visibility = View.GONE
         supportActionBar?.show()
+        navigation.visibility = View.VISIBLE
     }
 
     private fun switchContent() {

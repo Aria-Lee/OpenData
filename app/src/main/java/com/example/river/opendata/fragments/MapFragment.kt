@@ -121,20 +121,22 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        val task = object : AsyncTask<Void, ProgressData, Unit>() {
+        val task = object : AsyncTask<Void, ProgressData, MapStyleOptions>() {
+
             override fun onPreExecute() {
 
 
             }
 
-            override fun doInBackground(vararg params: Void?): Unit {
+            override fun doInBackground(vararg params: Void?): MapStyleOptions? {
+                var res: MapStyleOptions? = null
                 try {
                     // Customise the styling of the base map using a JSON object defined
                     // in a raw resource file.
-                    val res = MapStyleOptions.loadRawResourceStyle(context, R.raw.style_json)
-                    activity!!.runOnUiThread {
-                        mMap.setMapStyle(res)
-                    }
+                    res = MapStyleOptions.loadRawResourceStyle(context, R.raw.style_json)
+//                    activity!!.runOnUiThread {
+//                        mMap.setMapStyle(res)
+//                    }
                 } catch (e: Resources.NotFoundException) {
                     Log.e("aaaaa", "Can't find style. Error: ", e)
                 }
@@ -144,10 +146,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 val list = DataHelper.getList(jsonString)
                 for (i in 0 until list.size) {
 //                    Thread.sleep(10)
-
                     publishProgress(ProgressData(i, list[i]))
                 }
-                return Unit
+                return res
             }
 
             override fun onProgressUpdate(vararg data: ProgressData) {
@@ -157,7 +158,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 addPolygon(progressData.index, progressData.list)
             }
 
-            override fun onPostExecute(result: Unit) {
+            override fun onPostExecute(result: MapStyleOptions?) {
+
+                mMap.setMapStyle(result)
 
                 val bounds =
                         LatLngBounds(LatLng(23.091185, 120.228257), LatLng(23.450089, 120.665024))

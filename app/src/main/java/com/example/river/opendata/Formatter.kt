@@ -13,7 +13,9 @@ class Formatter(val barMaxValue: Float, val rainMaxValue: Float, val rainMinValu
         // write your logic here
         //var v = value - barMaxValue
 
-        var v = (value - barMaxValue - rainMinValue) * (rainMaxValue - rainMinValue) / (barMaxValue / 5) / 2 + rainMinValue
+        if (value == 0f) return "0"
+
+        val v = (value - barMaxValue - rainMinValue) * (rainMaxValue - rainMinValue) / (barMaxValue / 5) / 2 + rainMinValue
 
         return mFormat.format(v) // e.g. append a dollar-sign
     }

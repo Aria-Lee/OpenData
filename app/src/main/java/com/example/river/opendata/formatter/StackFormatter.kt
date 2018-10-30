@@ -20,6 +20,8 @@ class StackFormatter() : StackedValueFormatter(false, "$", 0) {
 
     override fun getFormattedValue(value: Float, entry: Entry?, dataSetIndex: Int, viewPortHandler: ViewPortHandler?): String {
 
+        if (value == 0f) return "0"
+
         val barEntry = entry as BarEntry
         val hashCode = barEntry.hashCode()
 

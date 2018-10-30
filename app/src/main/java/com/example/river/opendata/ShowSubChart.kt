@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import com.bumptech.glide.Glide
+import com.example.river.opendata.formatter.DecimalFormatter
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.*
@@ -94,6 +95,9 @@ class ShowSubChart : AppCompatActivity() {
             list.add(BarEntry(i.toFloat(), value))
         }
         barMaxValue *= 1.1f
+        println("777 *1.1 $barMaxValue")
+
+
         return list
     }
 
@@ -137,6 +141,7 @@ class ShowSubChart : AppCompatActivity() {
         set.valueTextColor = Color.rgb(60, 220, 78)
         set.valueTextSize = 10f
         set.axisDependency = YAxis.AxisDependency.LEFT
+        set.valueFormatter = DecimalFormatter()
 
         val barWidth = 0.45f
         val barData = BarData(set)
@@ -150,8 +155,10 @@ class ShowSubChart : AppCompatActivity() {
         for (i in lineEntries) {
             if ((rainMaxValue - rainMinValue) == 0f) {
                 i.y = (barMaxValue)
+                println("777 _0 ${i.y}")
             } else {
                 i.y = (barMaxValue) + (((i.y - rainMinValue) * 2 * (barMaxValue / 5)) / (rainMaxValue - rainMinValue))
+                println("777 ${i.y}")
             }
         }
 
