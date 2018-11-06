@@ -33,6 +33,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     lateinit var okHttp: CusOkHttp
     var district: String? = ""
     private lateinit var markerImage: BitmapDescriptor
+    private var polygonList: MutableList<Polygon> = mutableListOf()
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -95,6 +96,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
             val year = thisView.all_year_spinner.selectedItem.toString().toInt()
             val data = MapResponseData.getData(year)
+
             //有資料，顯示在 Marker 上
             if (marker != null && data != null) {
                 (context as MapsActivity).runOnUiThread {
@@ -115,6 +117,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     okHttp.startTasks()
                 }
             }
+
+            updateMapColor()
         }
     }
 
@@ -221,15 +225,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 mMap.setOnMapLoadedCallback {
                     callBack.invoke()
                 }
-
-
             }
 
         }
 
         task.execute()
     }
-
 
     private fun addPolygon(i: Int, list: MutableList<LatLng>) {
         val polygonOptions = PolygonOptions()
@@ -238,17 +239,23 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             polygonOptions.add(j)
         }
 
+//        var data = MapResponseData.checkAllDatas()!!
+//        val value = data[i]
+
         val polygon = mMap.addPolygon(
                 polygonOptions
                         .strokeWidth(5f)
                         .strokeColor(Color.rgb(0, 163, 11))
                         .fillColor(Color.argb(100, 0, 224, 15))
+//                        .fillColor(getPolygonColor(value))
         )
+
+        polygonList.add(polygon)
+
         polygon.isClickable = true
 
         polygon.tag = DataHelper.districtList[i]
     }
-
 
     private fun addMarker(latLng: LatLng, value: String) {
         district = getDistrict(latLng)
@@ -294,6 +301,28 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         this.callBack = callBack
     }
 
+    fun updateMapColor() {
+        val year = thisView.all_year_spinner.selectedItem.toString().toInt()
+
+        for (i in polygonList.indices) {
+
+            val district = DataHelper.districtList[i]
+            val value = MapResponseData.getDengueValue(year, district)
+            polygonList[i].fillColor = getPolygonColor(value.toInt())
+        }
+    }
+
+    fun getPolygonColor(value: Int): Int {
+
+        return when {
+            value in 0..10 -> Color.argb(100, 0, 224, 15)
+            value in 10..100 -> Color.argb(100, 255, 225, 0)
+            value in 100..1000 -> Color.argb(100, 255, 162, 0)
+            value > 1000 -> Color.argb(100, 255, 0, 0)
+            else -> Color.argb(100, 0, 224, 15)
+        }
+    }
+
 
     private fun addPolygons(list: MutableList<MutableList<LatLng>>) {
 
@@ -318,3 +347,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 }
 
 class ProgressData(var index: Int, var list: MutableList<LatLng>)
+
+/*
+* 0 argb(100, 0, 224, 15)
+* 10 argb(100, 255, 225, 0)
+* 100  argb(100, 255, 162, 0)
+* 1000 argb(100, 255, 0, 0)
+* */

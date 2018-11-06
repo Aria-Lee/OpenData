@@ -8,12 +8,16 @@ import android.view.View
 import android.view.ViewGroup
 import com.example.river.opendata.formatter.MainFormatter
 import com.example.river.opendata.R
+import com.example.river.opendata.formatter.BarFormatter
 import com.example.river.opendata.formatter.StackFormatter
 import com.github.mikephil.charting.charts.CombinedChart
+import com.github.mikephil.charting.components.Legend
+import com.github.mikephil.charting.components.LegendEntry
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import kotlinx.android.synthetic.main.main_chart.*
 import kotlinx.android.synthetic.main.main_chart.view.*
 import org.json.JSONObject
 
@@ -67,12 +71,36 @@ class ChartFragment : Fragment() {
             addAYearHumidityValueToList(humidity, i.toFloat())
         }
 
+        setChartMain(chart_main)
+    }
+
+    fun setChartMain(chart_main:CombinedChart){
+        val colorArray = listOf(Color.rgb(0, 224, 15),
+                Color.rgb(255, 123, 0),
+                Color.rgb(195, 0, 255),
+                Color.argb(0,0,0,0),
+                Color.rgb(0, 146, 199),
+                Color.rgb(0, 176, 240),
+                Color.rgb(122, 220, 255))
+        val stringArray = listOf("雨量", "溫度", "濕度", "登革熱", "其他", "第二高", "第一高")
+        val legendEntryList = mutableListOf<LegendEntry>()
+
+        for ( i in 0..6){
+            legendEntryList.add(LegendEntry(stringArray[i],
+                    Legend.LegendForm.DEFAULT,
+                    Float.NaN,
+                    Float.NaN,
+                    null,
+                    colorArray[i]))
+        }
+
         val data = CombinedData()
 
 //        data.setData(generateBarData())
         data.setData(getLineData())
         data.setData(generateStackData())
 
+        chart_main.legend.setCustom(legendEntryList)
         chart_main.xAxis.position = XAxis.XAxisPosition.BOTTOM
         chart_main.xAxis.axisMinimum = 2012f
         chart_main.axisLeft.axisMinimum = 0f
@@ -81,6 +109,7 @@ class ChartFragment : Fragment() {
         chart_main.xAxis.spaceMin = 1f
         chart_main.data = data
         chart_main.description.text = ""
+
         chart_main.invalidate()
     }
 
@@ -97,6 +126,7 @@ class ChartFragment : Fragment() {
         set.valueTextColor = Color.rgb(0, 0, 0)
         set.valueTextSize = 10f
         set.axisDependency = YAxis.AxisDependency.LEFT
+        set.valueFormatter = BarFormatter()
 
         val entries2 = ArrayList<BarEntry>()
 
@@ -120,6 +150,7 @@ class ChartFragment : Fragment() {
 
         val barData = BarData(set, set2)
         barData.barWidth = barWidth
+
 
         return barData
     }
