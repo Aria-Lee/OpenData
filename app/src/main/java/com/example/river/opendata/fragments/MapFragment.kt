@@ -317,7 +317,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         return when {
             value in 0..10 -> Color.argb(100, 0, 224, 15)
             value in 10..100 -> Color.argb(100, 255, 225, 0)
-            value in 100..1000 -> Color.argb(100, 255, 162, 0)
+            value in 100..1000 -> Color.argb(100, 255, 132, 0)
             value > 1000 -> Color.argb(100, 255, 0, 0)
             else -> Color.argb(100, 0, 224, 15)
         }
