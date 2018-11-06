@@ -55,7 +55,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         return CusTask(
                 year,
-                "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/dengue",
+                "http://member-env-1.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/dengue",
                 JSONObject().put("year", year).toString()
         ) {
             MapResponseData.addData(year, it.getJSONObject("data"))
@@ -230,28 +230,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         task.execute()
     }
 
-    private fun addPolygons(list: MutableList<MutableList<LatLng>>) {
-
-        for (i in 0 until list.size) {
-
-            val polygonOptions = PolygonOptions()
-
-            for (j in list[i]) {
-                polygonOptions.add(j)
-            }
-
-            val polygon = mMap.addPolygon(
-                    polygonOptions
-                            .strokeWidth(5f)
-                            .strokeColor(Color.rgb(0, 163, 11))
-                            .fillColor(Color.argb(100, 0, 224, 15))
-            )
-            polygon.isClickable = true
-            var aa = DataHelper.districtList[i]
-
-            polygon.tag = DataHelper.districtList[i]
-        }
-    }
 
     private fun addPolygon(i: Int, list: MutableList<LatLng>) {
         val polygonOptions = PolygonOptions()
@@ -314,6 +292,28 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private lateinit var callBack: () -> Unit
     fun addCallBack(callBack: () -> Unit) {
         this.callBack = callBack
+    }
+
+
+    private fun addPolygons(list: MutableList<MutableList<LatLng>>) {
+
+        for (i in 0 until list.size) {
+
+            val polygonOptions = PolygonOptions()
+
+            for (j in list[i]) {
+                polygonOptions.add(j)
+            }
+
+            val polygon = mMap.addPolygon(
+                    polygonOptions
+                            .strokeWidth(5f)
+                            .strokeColor(Color.rgb(0, 163, 11))
+                            .fillColor(Color.argb(100, 0, 224, 15))
+            )
+            polygon.isClickable = true
+            polygon.tag = DataHelper.districtList[i]
+        }
     }
 }
 

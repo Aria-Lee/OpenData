@@ -79,7 +79,7 @@ class ShowSubChart : AppCompatActivity() {
 
         return CusTask(
                 year.toInt(),
-                "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/dengue",
+                "http://member-env-1.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/dengue",
                 getRequestStringFromUI()
         ) {
             barEntries =
@@ -111,7 +111,7 @@ class ShowSubChart : AppCompatActivity() {
 
         return CusTask(
                 year.toInt(),
-                "http://member-env.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/rainfall",
+                "http://member-env-1.jdrcjciuxp.ap-northeast-1.elasticbeanstalk.com/api/rainfall",
                 jsonObject.toString()
         ) {
             lineEntries =
