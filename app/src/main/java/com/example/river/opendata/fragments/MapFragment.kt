@@ -1,6 +1,7 @@
 package com.example.river.opendata.fragments
 
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Resources
 import android.graphics.BitmapFactory
@@ -17,15 +18,16 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import com.example.river.opendata.*
-import com.example.river.opendata.DataHelper.Companion.getList
 import com.example.river.opendata.R
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
+import com.google.maps.android.SphericalUtil
 import kotlinx.android.synthetic.main.fragment_map.view.*
 import org.json.JSONObject
 
 
 class MapFragment : Fragment(), OnMapReadyCallback {
+
 
     private lateinit var mMap: GoogleMap
     private var marker: Marker? = null
@@ -34,6 +36,23 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     var district: String? = ""
     private lateinit var markerImage: BitmapDescriptor
     private var polygonList: MutableList<Polygon> = mutableListOf()
+    var cameraHeight: Double = 0.0
+    var cameraWidth: Double = 0.0
+    lateinit var viewPort: VisibleRegion
+    var westLng = 120.024
+    var eastLng = 120.656363
+    var northLat = 23.413767
+    var southLat = 22.887520
+    var westBoundLng = 0.00
+    var eastBoundLng = 0.00
+    var northBoundLat = 0.00
+    var southBoundLat = 0.00
+    val tainanHeight = northLat - southLat
+    val tainanWidth = eastLng - westLng
+    lateinit var cameraBounds: LatLngBounds
+    val tainanCenter = LatLng((northLat + southLat) / 2, (westLng + eastLng) / 2)
+    var oriZoom = 0.0f
+    var initCameraBounds = 0
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -41,6 +60,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         spinnerInit()
         val map = getChildFragmentManager().findFragmentById(R.id.tainanMap) as SupportMapFragment
         map.getMapAsync(this)
+        println("*********   onCreatView")
+
         return thisView
     }
 
@@ -50,6 +71,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         okHttp = CusOkHttp(this.context!!)
         MapsInitializer.initialize(this.context)
         makeMarkerIcon()
+        println("*********   onCreat")
+
     }
 
     private fun getDengueTask(year: Int): CusTask {
@@ -122,10 +145,20 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+//    override fun onCameraIdle() {
+//        viewPort = mMap.projection.visibleRegion
+//        cameraHeight = SphericalUtil.computeDistanceBetween(viewPort.nearLeft, viewPort.farLeft)
+//        cameraWidth = SphericalUtil.computeDistanceBetween(viewPort.nearLeft, viewPort.nearRight)
+//    }
+
+
     override fun onMapReady(googleMap: GoogleMap) {
+        println("*********   onMapReady")
+
         mMap = googleMap
 
-        val task = object : AsyncTask<Void, ProgressData, MapStyleOptions>() {
+        val task = @SuppressLint("StaticFieldLeak")
+        object : AsyncTask<Void, ProgressData, MapStyleOptions>() {
 
             override fun onPreExecute() {
 
@@ -142,7 +175,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 //                        mMap.setMapStyle(res)
 //                    }
                 } catch (e: Resources.NotFoundException) {
-                    Log.e("aaaaa", "Can't find style. Error: ", e)
+                    Log.e("aaaaa", "Can'northLat find style. Error: ", e)
                 }
 
                 val jsonString = DataHelper.getJSONString(resources.openRawResource(R.raw.gml_json))
@@ -165,18 +198,24 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             override fun onPostExecute(result: MapStyleOptions?) {
 
                 mMap.setMapStyle(result)
+                mMap.uiSettings.isRotateGesturesEnabled = false
+                mMap.uiSettings.isCompassEnabled  =false
 
-                val bounds =
-                        LatLngBounds(LatLng(23.091185, 120.228257), LatLng(23.450089, 120.665024))
-                mMap.setLatLngBoundsForCameraTarget(bounds)
-                mMap.setMinZoomPreference(10.0f)
+                oriZoom = 9.6f
+                mMap.setMinZoomPreference(9.6f)
 
-                mMap.moveCamera(
-                        CameraUpdateFactory.newLatLngZoom(
-                                LatLng(
-                                        23.000947952270508,
-                                        120.14522552490234),
-                                10.0f))
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(tainanCenter,
+                        oriZoom))
+                setCameraBouns()
+
+                mMap.setOnCameraIdleListener {
+                    println("********** ${mMap.cameraPosition.zoom}")
+                    println("********** $oriZoom")
+                    if (mMap.cameraPosition.zoom != oriZoom) {
+                        setCameraBouns()
+                        oriZoom = mMap.cameraPosition.zoom
+                    }
+                }
 
                 mMap.setOnMapLongClickListener {
                     val year = thisView.all_year_spinner.selectedItem.toString().toInt()
@@ -191,9 +230,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
                     //有資料
                     removeMarker()
-                    val district = getDistrict(it)
-
-                    if (district != null) {
+                    val address = getDistrict(it)
+                    val district = address?.locality
+                    val admin = address?.adminArea
+                    if (district != null && admin == "台南市") {
                         val value = MapResponseData.getDengueValue(year, district)
                         addMarker(it, value)
                     }
@@ -214,7 +254,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
                 mMap.setOnMarkerClickListener { p0 ->
                     removeMarker()
-                    val district = getDistrict(p0!!.position)
+                    val district = getDistrict(p0!!.position)?.locality
                     val intent = Intent(context, ShowSubChart::class.java)
                     intent.putExtra("district", district)
                     startActivity(intent)
@@ -230,6 +270,29 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
 
         task.execute()
+    }
+
+    private fun setCameraBouns() {
+        viewPort = mMap.projection.visibleRegion
+
+        cameraHeight = viewPort.farLeft.latitude - viewPort.nearLeft.latitude
+        cameraWidth = viewPort.nearRight.longitude - viewPort.nearLeft.longitude
+
+        northBoundLat = if (tainanHeight > cameraHeight) (northLat - cameraHeight / 2)
+        else tainanCenter.latitude + (cameraHeight - tainanHeight) / 2
+
+        southBoundLat = if (tainanHeight > cameraHeight) (southLat + cameraHeight / 2)
+        else tainanCenter.latitude - (cameraHeight - tainanHeight) / 2
+
+        eastBoundLng = if (tainanWidth > cameraWidth) (eastLng - cameraWidth / 2)
+        else tainanCenter.longitude + (cameraWidth - tainanWidth) / 2
+
+        westBoundLng = if (tainanWidth > cameraWidth) (westLng + cameraWidth / 2)
+        else tainanCenter.longitude - (cameraWidth - tainanWidth) / 2
+
+        cameraBounds = LatLngBounds(LatLng(southBoundLat, westBoundLng), LatLng(northBoundLat, eastBoundLng))
+        mMap.setLatLngBoundsForCameraTarget(cameraBounds)
+        println("********** cameraBounds $cameraBounds")
     }
 
     private fun addPolygon(i: Int, list: MutableList<LatLng>) {
@@ -258,7 +321,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun addMarker(latLng: LatLng, value: String) {
-        district = getDistrict(latLng)
+        district = getDistrict(latLng)?.locality
 //        try {
 //            dengueNum = dengue!!.getInt(district)
 //        } catch (e: Exception) {
@@ -283,7 +346,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun getDistrict(latLng: LatLng): String? {
+    private fun getDistrict(latLng: LatLng): Address? {
         val geoCoder = Geocoder(this.context)
         val addressList: MutableList<Address>
 
@@ -293,7 +356,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             return null
         }
 
-        return addressList[0].locality
+        return addressList[0]
     }
 
     private lateinit var callBack: () -> Unit
@@ -316,8 +379,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         return when {
             value in 0..10 -> Color.argb(100, 0, 224, 15)
-            value in 10..100 -> Color.argb(100, 255, 225, 0)
-            value in 100..1000 -> Color.argb(100, 255, 132, 0)
+            value in 11..100 -> Color.argb(100, 255, 225, 0)
+            value in 101..1000 -> Color.argb(100, 255, 132, 0)
             value > 1000 -> Color.argb(100, 255, 0, 0)
             else -> Color.argb(100, 0, 224, 15)
         }

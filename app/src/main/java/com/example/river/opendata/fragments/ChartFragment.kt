@@ -102,11 +102,13 @@ class ChartFragment : Fragment() {
 
         chart_main.legend.setCustom(legendEntryList)
         chart_main.xAxis.position = XAxis.XAxisPosition.BOTTOM
-        chart_main.xAxis.axisMinimum = 2012f
+        chart_main.xAxis.axisMinimum = 2012.5f
         chart_main.axisLeft.axisMinimum = 0f
         chart_main.axisRight.axisMinimum = 0f
-        chart_main.xAxis.axisMaximum = 2019f
+        chart_main.xAxis.axisMaximum = 2018.5f
         chart_main.xAxis.spaceMin = 1f
+        chart_main.axisRight.isEnabled = false
+        chart_main.axisLeft.isEnabled = false
         chart_main.data = data
         chart_main.description.text = ""
 

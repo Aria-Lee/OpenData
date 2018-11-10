@@ -41,6 +41,7 @@ class ShowSubChart : AppCompatActivity() {
 
         district = intent.getStringExtra("district")
 
+        setSupportActionBar(subtoolbar)
         this.title = district
 
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)

@@ -5,12 +5,17 @@ import android.graphics.drawable.Drawable
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.view.Menu
 import android.view.View
 import com.bumptech.glide.Glide
+import com.bumptech.glide.TransitionOptions
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.load.resource.bitmap.BitmapTransitionOptions
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.bumptech.glide.request.transition.Transition
 import com.example.river.opendata.fragments.ChartFragment
 import com.example.river.opendata.fragments.MapFragment
 import com.google.android.gms.maps.model.LatLng
@@ -32,16 +37,20 @@ class MapsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        supportActionBar?.hide()
-
         setContentView(R.layout.activity_maps)
+
+        setSupportActionBar(toolbar)
+        with(supportActionBar) {
+            title = "Map"
+            this?.hide()
+        }
+
         navigation.visibility = View.GONE
 
         Glide
                 .with(this)
                 .load(R.drawable.mosquito_clipart_animation)
-                .addListener(object :RequestListener<Drawable>{
+                .addListener(object : RequestListener<Drawable> {
                     override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?, dataSource: DataSource?, isFirstResource: Boolean): Boolean {
                         initView()
                         return false
@@ -52,9 +61,13 @@ class MapsActivity : AppCompatActivity() {
                     }
                 })
                 .into(loading)
+
     }
 
     private fun initView() {
+
+        supportActionBar?.show()
+        navigation.visibility = View.VISIBLE
 
         init()
 
@@ -78,7 +91,6 @@ class MapsActivity : AppCompatActivity() {
     private fun init() {
         MapResponseData.preAddData()
         initFragments()
-
         switchContent()
     }
 
@@ -95,9 +107,7 @@ class MapsActivity : AppCompatActivity() {
     }
 
     private fun hideLoadingImage() {
-        loading.visibility = View.GONE
-        supportActionBar?.show()
-        navigation.visibility = View.VISIBLE
+        loading.visibility = View.INVISIBLE
     }
 
     private fun switchContent() {
@@ -137,25 +147,26 @@ class MapsActivity : AppCompatActivity() {
         }
     }
 
-    fun PtInPolygon(point: LatLng, APoints: MutableList<LatLng>): Boolean {
-        var nCross = 0
-        for (i in 0..APoints.size - 1) {
-            val p1 = APoints.get(i)
-            val p2 = APoints.get((i + 1) % APoints.size)
-            // 求解 y=p.y 與 p1p2 的交點
-            if (p1.longitude == p2.longitude)      // p1p2 與 y=p0.y平行
-                continue;
-            if (point.longitude < Math.min(p1.longitude, p2.longitude))   // 交點在p1p2延長線上
-                continue;
-            if (point.longitude >= Math.max(p1.longitude, p2.longitude))   // 交點在p1p2延長線上
-                continue;
-            // 求交點的 X 坐標 --------------------------------------------------------------
-            val x = (point.longitude - p1.longitude) * (p2.latitude - p1.latitude) / (p2.longitude - p1.longitude) + p1.latitude
-            if (x > point.latitude)
-                nCross++; // 只統計單邊交點
-        }
-        // 單邊交點為偶數，點在多邊形之外 ---
-        return (nCross % 2 == 1)
-    }
+
+//    fun PtInPolygon(point: LatLng, APoints: MutableList<LatLng>): Boolean {
+//        var nCross = 0
+//        for (i in 0..APoints.size - 1) {
+//            val p1 = APoints.get(i)
+//            val p2 = APoints.get((i + 1) % APoints.size)
+//            // 求解 y=p.y 與 p1p2 的交點
+//            if (p1.longitude == p2.longitude)      // p1p2 與 y=p0.y平行
+//                continue;
+//            if (point.longitude < Math.min(p1.longitude, p2.longitude))   // 交點在p1p2延長線上
+//                continue;
+//            if (point.longitude >= Math.max(p1.longitude, p2.longitude))   // 交點在p1p2延長線上
+//                continue;
+//            // 求交點的 X 坐標 --------------------------------------------------------------
+//            val x = (point.longitude - p1.longitude) * (p2.latitude - p1.latitude) / (p2.longitude - p1.longitude) + p1.latitude
+//            if (x > point.latitude)
+//                nCross++; // 只統計單邊交點
+//        }
+//        // 單邊交點為偶數，點在多邊形之外 ---
+//        return (nCross % 2 == 1)
+//    }
 }
 
