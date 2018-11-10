@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".ShowSubChart">
 
     <android.support.v7.widget.Toolbar
@@ -11,7 +12,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorPrimary"
-        app:popupTheme="@style/Theme.AppCompat.DayNight"></android.support.v7.widget.Toolbar>
+        app:popupTheme="@style/Theme.AppCompat.DayNight"
+        app:theme="@style/ToolbarColoredBackArrow">
+
+    </android.support.v7.widget.Toolbar>
 
     <Spinner
         android:id="@+id/year_spinner"
@@ -29,7 +33,7 @@
         android:id="@+id/year_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
         android:text="請選擇年份"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
@@ -40,7 +44,7 @@
         android:id="@+id/month_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
         android:text="請選擇月份"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
@@ -92,8 +96,9 @@
         android:layout_width="70dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
+        android:backgroundTint="#00b7a3"
         android:text="GO"
         app:layout_constraintBottom_toBottomOf="@+id/month_title"
         app:layout_constraintEnd_toEndOf="parent"

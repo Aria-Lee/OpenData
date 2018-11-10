@@ -1,9 +1,12 @@
 package com.example.river.opendata
 
+import android.app.ProgressDialog.show
+import android.graphics.Color
 import android.graphics.PointF
 import android.graphics.drawable.Drawable
 import android.os.AsyncTask
 import android.os.Bundle
+import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.View
@@ -16,6 +19,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
+import com.example.river.opendata.fragments.AboutFragment
 import com.example.river.opendata.fragments.ChartFragment
 import com.example.river.opendata.fragments.MapFragment
 import com.google.android.gms.maps.model.LatLng
@@ -27,13 +31,15 @@ class MapsActivity : AppCompatActivity() {
 
     enum class FragmentType {
         Map,
-        Chart
+        Chart,
+        About
     }
 
     private var type = FragmentType.Map
     private val manager = this.supportFragmentManager
     private var mapFragment: MapFragment? = null
     private var chartFragment: ChartFragment? = null
+    private var aboutFragment: AboutFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +47,9 @@ class MapsActivity : AppCompatActivity() {
 
         setSupportActionBar(toolbar)
         with(supportActionBar) {
-            title = "Map"
+            title = "Visual Dengue"
+            toolbar.setTitleTextColor(Color.WHITE)
+//            toolbar.setLogo(R.drawable.mosquito)
             this?.hide()
         }
 
@@ -79,6 +87,11 @@ class MapsActivity : AppCompatActivity() {
                 R.id.navigation_chart -> {
                     type = FragmentType.Chart
                 }
+
+                R.id.navigation_about -> {
+                    type = FragmentType.About
+                }
+
                 else -> {
                     return@setOnNavigationItemSelectedListener false
                 }
@@ -104,6 +117,10 @@ class MapsActivity : AppCompatActivity() {
         if (chartFragment == null) {
             chartFragment = ChartFragment()
         }
+
+        if (aboutFragment == null) {
+            aboutFragment = AboutFragment()
+        }
     }
 
     private fun hideLoadingImage() {
@@ -121,6 +138,7 @@ class MapsActivity : AppCompatActivity() {
                 }
                 transaction
                         .hide(chartFragment!!)
+                        .hide(aboutFragment!!)
                         .show(mapFragment!!)
                         .commit()
             }
@@ -131,7 +149,19 @@ class MapsActivity : AppCompatActivity() {
                 }
                 transaction
                         .hide(mapFragment!!)
+                        .hide(aboutFragment!!)
                         .show(chartFragment!!)
+                        .commit()
+            }
+
+            FragmentType.About -> {
+                if (!aboutFragment!!.isAdded) {
+                    transaction.add(R.id.container, aboutFragment!!)
+                }
+                transaction
+                        .hide(mapFragment!!)
+                        .hide(chartFragment!!)
+                        .show(aboutFragment!!)
                         .commit()
             }
         }

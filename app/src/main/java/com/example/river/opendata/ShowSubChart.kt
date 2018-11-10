@@ -43,6 +43,8 @@ class ShowSubChart : AppCompatActivity() {
 
         setSupportActionBar(subtoolbar)
         this.title = district
+        subtoolbar.setTitleTextColor(Color.WHITE)
+
 
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         spinnerInit()
@@ -178,9 +180,11 @@ class ShowSubChart : AppCompatActivity() {
         data.setData(generateBarData())
 
         chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
-        chart.xAxis.axisMinimum = 0f
+        chart.xAxis.axisMinimum = 0.5f
         chart.axisLeft.axisMinimum = 0f
         chart.axisRight.axisMinimum = 0f
+        chart.xAxis.spaceMin = 1f
+        chart.xAxis.axisMaximum = 31.5f
         chart.data = data
 
         chart.invalidate()

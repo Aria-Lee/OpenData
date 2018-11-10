@@ -60,8 +60,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         spinnerInit()
         val map = getChildFragmentManager().findFragmentById(R.id.tainanMap) as SupportMapFragment
         map.getMapAsync(this)
-        println("*********   onCreatView")
-
         return thisView
     }
 
@@ -71,7 +69,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         okHttp = CusOkHttp(this.context!!)
         MapsInitializer.initialize(this.context)
         makeMarkerIcon()
-        println("*********   onCreat")
 
     }
 
@@ -153,7 +150,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
 
     override fun onMapReady(googleMap: GoogleMap) {
-        println("*********   onMapReady")
 
         mMap = googleMap
 
@@ -208,9 +204,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                         oriZoom))
                 setCameraBouns()
 
-                mMap.setOnCameraIdleListener {
-                    println("********** ${mMap.cameraPosition.zoom}")
-                    println("********** $oriZoom")
+                mMap.setOnCameraMoveListener {
                     if (mMap.cameraPosition.zoom != oriZoom) {
                         setCameraBouns()
                         oriZoom = mMap.cameraPosition.zoom
@@ -292,7 +286,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         cameraBounds = LatLngBounds(LatLng(southBoundLat, westBoundLng), LatLng(northBoundLat, eastBoundLng))
         mMap.setLatLngBoundsForCameraTarget(cameraBounds)
-        println("********** cameraBounds $cameraBounds")
     }
 
     private fun addPolygon(i: Int, list: MutableList<LatLng>) {
