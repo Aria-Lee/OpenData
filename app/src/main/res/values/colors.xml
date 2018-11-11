@@ -8,4 +8,9 @@
     <color name="white">#FFFFFF</color>
     <color name="red">#FF0000</color>
     <color name="loadingBackground">#df4140</color>
+    <color name="mapColorFrom0To10">#00E00F</color>
+    <color name="mapColorFrom11To100">#FFFF00</color>
+    <color name="mapColorFrom101To1000">#FF8400</color>
+    <color name="mapColorMoreThan1000">#FF0000</color>
+
 </resources>

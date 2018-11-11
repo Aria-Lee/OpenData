@@ -38,7 +38,8 @@
         android:id="@+id/loading"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
+        android:scaleType="fitCenter"
+        android:background="@color/loadingBackground"
         tools:srcCompat="@tools:sample/avatars"
         android:fitsSystemWindows="false"
         android:elevation="10dp"/>

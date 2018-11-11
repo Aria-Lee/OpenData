@@ -42,7 +42,7 @@ class ShowSubChart : AppCompatActivity() {
         district = intent.getStringExtra("district")
 
         setSupportActionBar(subtoolbar)
-        this.title = district
+        this.title = "Visual Dengue  <$district>"
         subtoolbar.setTitleTextColor(Color.WHITE)
 
 

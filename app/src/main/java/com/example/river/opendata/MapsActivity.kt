@@ -1,5 +1,7 @@
 package com.example.river.opendata
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.app.ProgressDialog.show
 import android.graphics.Color
 import android.graphics.PointF
@@ -10,12 +12,15 @@ import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.View
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
 import com.bumptech.glide.Glide
 import com.bumptech.glide.TransitionOptions
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.load.resource.bitmap.BitmapTransitionOptions
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
@@ -58,6 +63,7 @@ class MapsActivity : AppCompatActivity() {
         Glide
                 .with(this)
                 .load(R.drawable.mosquito_clipart_animation)
+                .transition(withCrossFade(1000))
                 .addListener(object : RequestListener<Drawable> {
                     override fun onResourceReady(resource: Drawable?, model: Any?, target: Target<Drawable>?, dataSource: DataSource?, isFirstResource: Boolean): Boolean {
                         initView()
@@ -124,7 +130,32 @@ class MapsActivity : AppCompatActivity() {
     }
 
     private fun hideLoadingImage() {
-        loading.visibility = View.INVISIBLE
+//        loading.animate()
+//                .translationY(loading.height.toFloat())
+//                .setDuration(700)
+//                .setListener(object : AnimatorListenerAdapter(){
+//                    override fun onAnimationEnd(animation: Animator?) {
+//                        super.onAnimationEnd(animation)
+//                        loading.visibility = View.GONE
+//                    }
+//                }).start()
+
+        val fade = AlphaAnimation(1f,0f)
+        fade.duration = 600
+        fade.setAnimationListener(object : Animation.AnimationListener{
+            override fun onAnimationRepeat(animation: Animation?) {
+            }
+
+            override fun onAnimationStart(animation: Animation?) {
+            }
+
+            override fun onAnimationEnd(animation: Animation?) {
+                loading.visibility = View.INVISIBLE
+            }
+
+        })
+        loading.startAnimation(fade)
+
     }
 
     private fun switchContent() {
@@ -132,7 +163,7 @@ class MapsActivity : AppCompatActivity() {
         val transaction = manager
                 .beginTransaction()
         when (type) {
-            FragmentType.Map -> {
+            MapsActivity.FragmentType.Map -> {
                 if (!mapFragment!!.isAdded) {
                     transaction.add(R.id.container, mapFragment!!)
                 }
@@ -143,7 +174,7 @@ class MapsActivity : AppCompatActivity() {
                         .commit()
             }
 
-            FragmentType.Chart -> {
+            MapsActivity.FragmentType.Chart -> {
                 if (!chartFragment!!.isAdded) {
                     transaction.add(R.id.container, chartFragment!!)
                 }
@@ -154,7 +185,7 @@ class MapsActivity : AppCompatActivity() {
                         .commit()
             }
 
-            FragmentType.About -> {
+            MapsActivity.FragmentType.About -> {
                 if (!aboutFragment!!.isAdded) {
                     transaction.add(R.id.container, aboutFragment!!)
                 }
